@@ -1,0 +1,8 @@
+Let's press the [color index="840000"]“Phone triggers”[color index="800000"] button and call the cellphone,
+and make a call to the [color index="820000"]“PhoneWave (name subject to change)”[color index="800000"].
+[color index="800000"]It allows to confirm the controller settings from “CONFIG” of
+the system menu.
+Let's press the [color index="A0280000"]“Phone triggers”[color index="800000"] button and call the cellphone,
+and make a call to the [color index="820000"]“PhoneWave (name subject to change)”[color index="800000"].
+[color index="800000"]It allows to confirm the controller settings from “CONFIG” of the
+system menu.
