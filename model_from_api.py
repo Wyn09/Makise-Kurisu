@@ -93,10 +93,10 @@ async def handle_inputs(model, query, history):
     history, response = await model.chat_with_history(query, history)
     print(response)
     
-
+    
 async def main():
     model = APIChatModel(role="2b")
-    model.set_model_language()
+    model.set_model_language("日文")
     history = []
     while True:
         query = await ainput(">> ")  # 异步输入

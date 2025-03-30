@@ -4,7 +4,7 @@ import signal
 import sys
 import asyncio
 from qwen_vl_3B_Instruct import Img2TextModel
-from model_infer_hf_Qwen2d5 import ChatModel
+from model_hf_Qwen2d5 import ChatModel
 from model_from_api import APIChatModel
 from model_function_call import FunctionCallModel
 from concurrent.futures import ThreadPoolExecutor

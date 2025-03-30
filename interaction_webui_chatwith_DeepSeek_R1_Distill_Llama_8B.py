@@ -8,7 +8,7 @@ import soundfile as sf
 import shutil
 from constant import get_constant
 from preset import setup_reference
-from model_infer_hf_DeepSeek_R1_Distill_Llama_8B import ChatModel
+from model_hf_DeepSeek_R1_Distill_Llama_8B import ChatModel
 from baidu_translate import translate
 
 REMOVE_PATH, CHARACTER, REF_AUDIO_TEXT, WEIGHTS_MODEL_PATH, REF_LANGUAGE_OPTIONS, LANGUAGE_OPTIONS, CUT_METHOD_OPTIONS = get_constant()

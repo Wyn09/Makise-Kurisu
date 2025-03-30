@@ -1,11 +1,12 @@
 import asyncio
 from aioconsole import ainput
 from qwen_vl_3B_Instruct import Img2TextModel
-from model_infer_hf_Qwen2d5 import ChatModel
+from model_hf_Qwen2d5 import ChatModel as LocalChatModel
 from model_from_api import APIChatModel
 from model_function_call import FunctionCallModel
 from concurrent.futures import ThreadPoolExecutor
 import os
+import time
 from config import *
 from multi_function import *
 
@@ -25,43 +26,41 @@ async def recognize_screenshot(
         # print(f"sleep time: {min_sleep_time}sec to {min_sleep_time + time_size}sec")
 
 
-async def read_input(
+async def read_user_inputs(
         chatModel,
         img2textModel,
         funcCallModel
     ):
         global CHAT_HISTORY
         while True:
-            user_inputs = await ainput(">> ")
+            user_inputs = await ainput("🤗 >> ")
             user_inputs = user_inputs.strip().lower()
             if user_inputs in ["quit", "exit"]:
                 print("Exiting...")
+                for x in "🙀🐾🐾🐾":
+                    print(x)
+                    time.sleep(0.5)
                 # 当检测到退出命令时，结束进程
                 os._exit(0)
             else:
-                print(f"You: {user_inputs}")
-                # user_inputs = "用户" + user_inputs
-                # res = await functionCall_or_not(chatModel, img2textModel, funcCallModel, user_inputs, CHAT_HISTORY)
-                # if ~res:
-                #     await chatWithTTS(chatModel, user_inputs, CHAT_HISTORY)
+                print(f"🤓 : {user_inputs}")
+                asyncio.create_task(handle_user_inputs(chatModel, img2textModel, funcCallModel, user_inputs, CHAT_HISTORY))
 
-
-# def execute_screenshot(chatModel, img2textModel, init_sleep_time=5):        
-#     asyncio.run(recognize_screenshot(chatModel, img2textModel, init_sleep_time))
-
-# def execute_inputText(chatModel, img2textModel, funcCallModel):
-#     asyncio.run(read_input(chatModel, img2textModel, funcCallModel))
 
 async def main():
     # task1 = asyncio.create_task(recognize_screenshot(chatModel, img2textModel, 5))
-    task2 = asyncio.create_task(read_input(chatModel, img2textModel, funcCallModel))
+    # task2 = asyncio.create_task(read_user_inputs(chatModel, img2textModel, funcCallModel))
     # await task1
-    await task2
+    # await task2
 
+    await asyncio.gather(
+        #  recognize_screenshot(chatModel, img2textModel, 5),
+         read_user_inputs(chatModel, img2textModel, funcCallModel)
+    )
 
 if __name__ == "__main__":
 
-    # chatModel = ChatModel(
+    # chatModel = LocalChatModel(
     #     base_model=ChatModelConfig.base_model, 
     #     lora_path=ChatModelConfig.lora_path, 
     #     quantization=ChatModelConfig.quantization, 
@@ -91,29 +90,5 @@ if __name__ == "__main__":
     chatModel.set_model_language(TTSModelConfig.text_language)
 
     asyncio.run(main())
-
-    # th_screenshot = FunctionThread(
-    #     target=execute_screenshot, 
-    #     args=[
-    #         chatModel,
-    #         img2textModel,
-    #         Img2TextModelConfig.init_sleep_time, 
-    #     ]
-    # )
-    # th_screenshot.start()
-    
-    
-    # th_inptutText = FunctionThread(
-    #     target=execute_inputText,
-    #     args=[
-    #         chatModel,
-    #         img2textModel,
-    #         funcCallModel
-    #     ]
-    # )
-    # th_inptutText.start()
- 
-    
-    
 
     pass

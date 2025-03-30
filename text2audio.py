@@ -91,11 +91,12 @@ async def synthesize_and_play(
             except asyncio.TimeoutError:
                 pass
         
-        # 创建新任务
-        g_current_play_task = asyncio.create_task(request_and_play(url, params))
+    #     # 创建新任务
+    #     g_current_play_task = asyncio.create_task(request_and_play(url, params))
     
-    # 返回任务，调用者可以选择await它
-    return g_current_play_task
+    # # 返回任务，调用者可以选择await它
+    # return g_current_play_task
+    return await request_and_play(url, params)
 
 async def demo():
     text1 = """こんにちは！実はこの手紙は私の心の中で長い間温めていたが、今日やっと勇気を出してあなたに書いた。あなたは意外に感じるかもしれませんが、私はずっとあなたに言いたいことがあります。私はもう言わないと、いくつかの素晴らしい可能性を逃すかもしれないと思っているからです。"""

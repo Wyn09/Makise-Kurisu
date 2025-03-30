@@ -1,7 +1,8 @@
-from openai import OpenAI
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
 import os
 import asyncio
+from aioconsole import ainput
 from screen_grap import screenshot
 
 load_dotenv("./.env")
@@ -30,7 +31,7 @@ class FunctionCallModel:
 
         global INTENT_PROMPT
 
-        self.client = OpenAI(
+        self.client = AsyncOpenAI(
             api_key=api_key,
             base_url=base_url
         )
@@ -41,12 +42,12 @@ class FunctionCallModel:
         self.system_prompt = INTENT_PROMPT
         self.intent = None
 
-    def recognition(self, inputs):
+    async def recognition(self, inputs):
         messages = [
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": inputs}
         ]
-        response = self.chat_completion(messages)
+        response = await self.chat_completion(messages)
         self.intent = response.choices[0].message.content
         return self.intent
 
@@ -74,8 +75,8 @@ class FunctionCallModel:
     #     else:
     #         return "普通聊天"
         
-    def chat_completion(self, messages):
-        res = self.client.chat.completions.create(
+    async def chat_completion(self, messages):
+        res = await self.client.chat.completions.create(
             model = self.base_model,
             messages=messages,
             temperature=self.temperature,
@@ -83,14 +84,19 @@ class FunctionCallModel:
         )
 
         return res
+    
+async def handle_inputs(model, query):
+    response = await model.recognition(query)
+    print(response)
+    
 
-
-if __name__ == "__main__":
-
+async def main():
     model = FunctionCallModel()
-    while 1:
-        query = input(">>")
+    while True:
+        query = await ainput(">> ")  # 异步输入
         if query.lower() == "exit":
             break
-        response = model.recognition(query)
-        print(response)
+        asyncio.create_task(handle_inputs(model, "用户:" + query))  
+
+if __name__ == "__main__":
+    asyncio.run(main())  # 运行异步主函数

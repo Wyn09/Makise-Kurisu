@@ -1,39 +1,40 @@
 import asyncio
-from aioconsole import ainput  # 异步输入库
+from aioconsole import ainput
 
 async def task_a_loop():
     while True:
-        await asyncio.sleep(10)  # 每隔10秒执行一次
-        await async_io_operation()  # 异步IO操作（如aiohttp请求）
+        await asyncio.sleep(10)
+        print("Task A: Performing async IO...")
 
-async def async_io_operation():
-    # 使用异步库实现IO（例如aiohttp）
-    print("Task A: Performing async IO...")
-
-async def task_b_loop():
-    while True:
-        # 非阻塞读取用户输入
-        user_input = await ainput("Enter command: ")
-        
-        # 提交IO操作到事件循环（不阻塞输入）
-        asyncio.create_task(handle_user_input(user_input))
-
-async def handle_user_input(input_str):
+async def handle_user_input(input_str, result_queue):
     print(f"Task B: Processing '{input_str}'...")
-    await async_io_response(input_str)  # 异步处理并返回结果
-    return 1
+    await asyncio.sleep(2)  # 模拟异步操作
+    result = f"Result for '{input_str}'"
+    await result_queue.put(result)  # 将结果放入队列
+    return result
 
-async def async_io_response(input_str):
-    # 模拟异步IO（如数据库查询）
-    await asyncio.sleep(2)
-    print(f"Task B: Result for '{input_str}' received.")    
+async def task_b_loop(result_queue):
+    while True:
+        user_input = await ainput("Enter command: ")
+        # 提交任务，并传递队列用于存储结果
+        asyncio.create_task(handle_user_input(user_input, result_queue))
+
+async def result_processor(result_queue):
+    """独立协程：从队列中获取结果并处理"""
+    while True:
+        result = await result_queue.get()
+        print(f"\n[Result] {result}")
+        # 保持输入行在最后一行
+        print("\033[2K\rEnter command: ", end="")
+
 async def main():
-    # 启动任务A和任务B
-    task_a = asyncio.create_task(task_a_loop())
-    task_b = asyncio.create_task(task_b_loop())
-    
-    # 等待任意任务结束（按需调整）
-    await asyncio.gather(task_a, task_b)
+    result_queue = asyncio.Queue()
+    # 启动所有任务
+    await asyncio.gather(
+        task_a_loop(),
+        task_b_loop(result_queue),
+        result_processor(result_queue)
+    )
 
 if __name__ == "__main__":
     asyncio.run(main())
