@@ -46,7 +46,7 @@ class Img2TextModelConfig:
     quantization = "4bit" 
     max_new_tokens = 256
     state = ScreenshotState()
-    freeze_time = 20
+    freeze_time = 12
 
 class ChatModelConfig:
     base_model = r"../../pretrained_models/Qwen/Qwen2.5-3B-Instruct"
@@ -60,9 +60,9 @@ class ChatModelConfig:
     repetition_penalty=1.2
 
 class APIChatModelConfig:
-    base_model = "GLM-4-Flash"
-    api_key = os.getenv("ZHIPU_API_KEY")
-    base_url = os.getenv("ZHIPU_API_KEY_URL")
+    base_model = "deepseek-chat"
+    api_key = os.getenv("DEEPSEEK_API_KEY")
+    base_url = os.getenv("DEEPSEEK_API_KEY_URL")
     system_prompt = API_MODEL_SYSTEM_PROMPT
     temperature = 1.0
     top_p = 0.7

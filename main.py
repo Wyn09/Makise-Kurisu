@@ -28,7 +28,6 @@ async def recognize_screenshot(
         )
     )
 
-
 async def read_user_inputs(
     chatModel,
     img2textModel,
@@ -45,7 +44,6 @@ async def read_user_inputs(
                 print(x, end=" ")
                 time.sleep(0.5)
             # 当检测到退出命令时，结束进程
-            sys.exit(0)
             os._exit(0)
         else:
             print(f"🤓 : {user_inputs}")
@@ -64,6 +62,7 @@ async def read_user_inputs(
 
 async def main():
     
+    print(f"\ninit time: {asyncio.get_running_loop().time()}")
 
     await asyncio.gather(
          recognize_screenshot(chatModel, img2textModel),
