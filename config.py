@@ -1,5 +1,7 @@
 import os
 import threading
+import asyncio
+
 
 class FunctionThread(threading.Thread):
     def __init__(self, target, args=()):
@@ -14,6 +16,15 @@ class FunctionThread(threading.Thread):
     def get_result(self):
         self.join()  # 确保线程执行完毕
         return self.result
+    
+class ScreenshotState:
+    def __init__(self):
+        # 记录任务的下次计划执行时间
+        self.next_run_time = None
+        # 跟踪当前的睡眠任务以便取消
+        self.current_sleep = None
+        # 确保对共享状态的原子操作
+        self.lock = asyncio.Lock()
 
 
 class TTSModelConfig:
@@ -34,6 +45,8 @@ class Img2TextModelConfig:
     init_sleep_time = 5
     quantization = "4bit" 
     max_new_tokens = 256
+    state = ScreenshotState()
+    freeze_time = 20
 
 class ChatModelConfig:
     base_model = r"../../pretrained_models/Qwen/Qwen2.5-3B-Instruct"
@@ -56,3 +69,6 @@ class APIChatModelConfig:
     max_new_tokens = 160
     repetition_penalty = 1.2
     role = "kurisu"
+
+
+

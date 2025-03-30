@@ -10,12 +10,15 @@ import numpy as np
 from baidu_translate import translate
 from config import *
 
-async def random_sleep_with_response(response, alpha=5):
+async def get_random_sleep_time(response, alpha=5):
     min_sleep_time = len(response) / alpha
     time_size = min_sleep_time ** 0.5
     sleep_time = np.random.randint(min_sleep_time, min_sleep_time + time_size)
+    return sleep_time
+
+async def random_sleep_with_response(response, alpha=5):
+    sleep_time = await get_random_sleep_time(response, alpha)
     await asyncio.sleep(sleep_time)
-    return min_sleep_time, time_size
 
 async def chatWithTTS(
         chatModel,
@@ -74,7 +77,14 @@ async def chatWithImg(
     return response
 
 
-async def functionCall_or_not(chatModel, img2textModel, funcCallModel, user_inputs, chat_history):
+async def functionCall_or_not(
+    chatModel, 
+    img2textModel,
+    funcCallModel, 
+    user_inputs, 
+    chat_history,
+    loop
+):
     intent = await funcCallModel.recognition(user_inputs[3:])  
     if intent in "天气查询":
         result = "查询结果：今天天气不错哦，温度23度，东南微风，湿度70，空气质量清新，很适合出行呢！"
@@ -82,7 +92,7 @@ async def functionCall_or_not(chatModel, img2textModel, funcCallModel, user_inpu
         await random_sleep_with_response(response)
 
     elif intent in "看屏幕":
-        response = await chatWithImg(chatModel, img2textModel, chat_history, user_inputs)
+        response = await chatWithImg_sleep_correction(chatModel, img2textModel, chat_history, loop, user_inputs)
         await random_sleep_with_response(response)
 
     elif intent in "播放音乐":
@@ -98,9 +108,72 @@ async def functionCall_or_not(chatModel, img2textModel, funcCallModel, user_inpu
 
 
 
-async def handle_user_inputs(chatModel, img2textModel, funcCallModel, user_inputs, chat_history):
+async def handle_user_inputs(
+    chatModel, 
+    img2textModel, 
+    funcCallModel, 
+    user_inputs, 
+    chat_history, 
+    loop, 
+    state=Img2TextModelConfig.state, 
+    freeze_time=Img2TextModelConfig.freeze_time
+):
+    await delay_screenshot_time_or_not(loop, state, freeze_time)
+
     user_inputs = "用户:" + user_inputs
-    res = await functionCall_or_not(chatModel, img2textModel, funcCallModel, user_inputs, chat_history)
+    res = await functionCall_or_not(chatModel, img2textModel, funcCallModel, user_inputs, chat_history, loop)
     if not res:
         response = await chatWithTTS(chatModel, user_inputs, chat_history)
-        await random_sleep_with_response(response)
+
+
+async def delay_screenshot_time_or_not(loop, state, freeze_time):
+        current_time = loop.time()
+        desired_next_run = current_time + freeze_time  # freeze_time 保护期
+        async with state.lock:
+            if desired_next_run > state.next_run_time:  # 需要延长计划
+                state.next_run_time = desired_next_run
+                if state.current_sleep and not state.current_sleep.done():
+                    state.current_sleep.cancel()  # 打碎旧闹钟
+        print(f"state.next_run_time: ", state.next_run_time)
+
+
+async def chatWithImg_sleep_correction(
+    chatModel,
+    img2textModel,
+    chat_history,
+    loop,
+    user_inputs="",
+    init_sleep_time=Img2TextModelConfig.init_sleep_time,
+    state=Img2TextModelConfig.state,
+):
+    # 初始化计划本
+    async with state.lock:
+        if state.next_run_time is None:
+            state.next_run_time = loop.time() + init_sleep_time
+
+    await asyncio.sleep(init_sleep_time)
+    while True:     
+        async with state.lock:
+            now = loop.time()
+            wait_time = state.next_run_time - now  # 计算剩余等待时间
+
+            if wait_time <= 0:  # 到工作时间了
+                # print("Task A: Performing async IO...")
+                response = await chatWithImg(chatModel, img2textModel, chat_history, user_inputs)
+                sleep_time = await get_random_sleep_time(response)
+                state.next_run_time = now + sleep_time  # 计划下次工作时间
+                continue
+
+            # 设置新闹钟
+            state.current_sleep = asyncio.create_task(asyncio.sleep(wait_time))
+        try:
+            await state.current_sleep
+        except asyncio.CancelledError:
+            continue  # 闹钟被取消，重新检查计划本
+        finally:
+            async with state.lock:
+                state.current_sleep = None  # 清空当前闹钟
+        response = await chatWithImg(chatModel, img2textModel, chat_history)
+        sleep_time = await get_random_sleep_time(response)
+        async with state.lock:
+            state.next_run_time = loop.time() + sleep_time

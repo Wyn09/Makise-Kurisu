@@ -4,11 +4,14 @@ import random
 import os
 import aiohttp
 import asyncio
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv())
+
 # 禁用系统代理
 os.environ['NO_PROXY'] = 'fanyi-api.baidu.com'
 
-APP_ID = "20250311002299349"  # 替换为实际值
-SECRET_KEY = "wg0VK7qUFnyv1tBCE7ca"  # 替换为实际值
+APP_ID = os.getenv("BAIDU_TRANSLATE_APP_ID")  # 替换为实际值
+SECRET_KEY = os.getenv("BAIDU_TRANSLATE_KEY")  # 替换为实际值
 LANGUAGE_DICT = {
     "中文": "zh",
     "英文": "en",

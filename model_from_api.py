@@ -1,10 +1,10 @@
 from openai import AsyncOpenAI
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 import asyncio
 from aioconsole import ainput
 
-load_dotenv("./.env")
+load_dotenv(find_dotenv())
 
 class APIChatModel:
 

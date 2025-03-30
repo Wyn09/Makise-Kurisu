@@ -6,55 +6,67 @@ from model_from_api import APIChatModel
 from model_function_call import FunctionCallModel
 from concurrent.futures import ThreadPoolExecutor
 import os
+import sys
 import time
 from config import *
 from multi_function import *
 
 CHAT_HISTORY = []
-thread_pool = ThreadPoolExecutor()
 
 async def recognize_screenshot(
     chatModel,
-    img2textModel,
-    init_sleep_time
+    img2textModel
 ):
     global CHAT_HISTORY
-    await asyncio.sleep(init_sleep_time)
-    while True:                
-        response = await chatWithImg(chatModel, img2textModel, CHAT_HISTORY)
-        min_sleep_time, time_size = await random_sleep_with_response(response)
-        # print(f"sleep time: {min_sleep_time}sec to {min_sleep_time + time_size}sec")
+    loop = asyncio.get_running_loop()
+    asyncio.create_task(
+        chatWithImg_sleep_correction(
+            chatModel,
+            img2textModel,
+            CHAT_HISTORY,
+            loop
+        )
+    )
 
 
 async def read_user_inputs(
-        chatModel,
-        img2textModel,
-        funcCallModel
-    ):
-        global CHAT_HISTORY
-        while True:
-            user_inputs = await ainput("🤗 >> ")
-            user_inputs = user_inputs.strip().lower()
-            if user_inputs in ["quit", "exit"]:
-                print("Exiting...")
-                for x in "🙀🐾🐾🐾":
-                    print(x)
-                    time.sleep(0.5)
-                # 当检测到退出命令时，结束进程
-                os._exit(0)
-            else:
-                print(f"🤓 : {user_inputs}")
-                asyncio.create_task(handle_user_inputs(chatModel, img2textModel, funcCallModel, user_inputs, CHAT_HISTORY))
+    chatModel,
+    img2textModel,
+    funcCallModel
+):
+    loop = asyncio.get_running_loop()
+    global CHAT_HISTORY
+    while True:
+        user_inputs = await ainput("🤗 >> ")
+        user_inputs = user_inputs.strip().lower()
+        if user_inputs in ["quit", "exit"]:
+            print("\nExiting... ", end="")
+            for x in "🙀🐾🐾🐾":
+                print(x, end=" ")
+                time.sleep(0.5)
+            # 当检测到退出命令时，结束进程
+            sys.exit(0)
+            os._exit(0)
+        else:
+            print(f"🤓 : {user_inputs}")
+
+            asyncio.create_task(
+                handle_user_inputs(
+                    chatModel, 
+                    img2textModel, 
+                    funcCallModel, 
+                    user_inputs, 
+                    CHAT_HISTORY, 
+                    loop
+                )
+            )
 
 
 async def main():
-    # task1 = asyncio.create_task(recognize_screenshot(chatModel, img2textModel, 5))
-    # task2 = asyncio.create_task(read_user_inputs(chatModel, img2textModel, funcCallModel))
-    # await task1
-    # await task2
+    
 
     await asyncio.gather(
-        #  recognize_screenshot(chatModel, img2textModel, 5),
+         recognize_screenshot(chatModel, img2textModel),
          read_user_inputs(chatModel, img2textModel, funcCallModel)
     )
 

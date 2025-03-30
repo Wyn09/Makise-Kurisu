@@ -1,11 +1,11 @@
 from openai import AsyncOpenAI
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import os
 import asyncio
 from aioconsole import ainput
 from screen_grap import screenshot
 
-load_dotenv("./.env")
+load_dotenv(find_dotenv())
 
 
 INTENT_PROMPT = """用户会有以下意图:
@@ -47,9 +47,15 @@ class FunctionCallModel:
             {"role": "system", "content": self.system_prompt},
             {"role": "user", "content": inputs}
         ]
-        response = await self.chat_completion(messages)
-        self.intent = response.choices[0].message.content
-        return self.intent
+        try:
+            response = await self.chat_completion(messages)
+            self.intent = response.choices[0].message.content
+            
+        except Exception as e:
+            self.intent = "普通聊天"
+            
+        finally:
+            return self.intent
 
     # def function_call(self, chatModel, img2textModel, inputs):
     #     self.recognition(inputs)
@@ -76,14 +82,19 @@ class FunctionCallModel:
     #         return "普通聊天"
         
     async def chat_completion(self, messages):
-        res = await self.client.chat.completions.create(
-            model = self.base_model,
-            messages=messages,
-            temperature=self.temperature,
-            top_p=self.top_p
-        )
+        try:
+            res = await self.client.chat.completions.create(
+                model = self.base_model,
+                messages=messages,
+                temperature=self.temperature,
+                top_p=self.top_p
+            )
+        
+        except Exception as e:
+            res = e 
 
-        return res
+        finally:
+            return res
     
 async def handle_inputs(model, query):
     response = await model.recognition(query)
