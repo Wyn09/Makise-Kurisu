@@ -40,7 +40,7 @@ async def read_user_inputs(
         user_inputs = user_inputs.strip().lower()
         if user_inputs in ["quit", "exit"]:
             print("\nExiting... ", end="")
-            for x in "🙀🐾🐾🐾":
+            for x in "😱🐾🐾🐾":
                 print(x, end=" ")
                 time.sleep(0.5)
             # 当检测到退出命令时，结束进程

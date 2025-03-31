@@ -45,7 +45,7 @@ async def chatWithTTS(
     print(f"\nResponse:\n\t{response}")
 
     # 如果是本地部署的Model，并且不是中文或者粤语，那么就调用翻译API
-    if chatModel.language not in ["中文", "粤语"]:
+    if chatModel.language not in ["中文", "粤语", "中英混合"]:
         translated_text = await translate(response.replace("\n", ""))
         print(f"\n\t({translated_text})")
 

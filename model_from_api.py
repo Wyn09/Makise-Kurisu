@@ -47,9 +47,9 @@ class APIChatModel:
                 "粤语": r"./system_prompts/2B_sys_prompt_ZH.txt",
                 "英文": r"./system_prompts/2B_sys_prompt_EN.txt",
                 "日文": r"./system_prompts/2B_sys_prompt_JP.txt",
-                "中英混合": r"./system_prompts/Kurisu_sys_prompt_ZH.txt",
-                "日英混合": r"./system_prompts/Kurisu_sys_prompt_JP.txt",
-                "多语种混合": r"./system_prompts/Kurisu_sys_prompt_ZH.txt"
+                "中英混合": r"./system_prompts/2B_sys_prompt_ZH.txt",
+                "日英混合": r"./system_prompts/2B_sys_prompt_JP.txt",
+                "多语种混合": r"./system_prompts/2B_sys_prompt_ZH.txt"
             }
         }
     
