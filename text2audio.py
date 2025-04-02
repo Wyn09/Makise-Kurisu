@@ -6,6 +6,7 @@ import threading
 import time
 import aiohttp
 
+
 # 用一个全局变量记录当前播放的任务引用
 g_current_play_task = None
 g_lock = asyncio.Lock()
@@ -62,13 +63,14 @@ async def synthesize_and_play(
     top_p=0.7,
     temperature=1.0,
     speed=1,
+    port=9880
 ):
     """
     向已经启动的 api.py 发送异步推理请求，
     得到 wav 音频后使用 sounddevice 直接播放。
     """
     # 构造请求
-    url = "http://127.0.0.1:9880"
+    url = f"http://127.0.0.1:{port}"
     params = {
         "text": text,
         "text_language": text_language,

@@ -36,7 +36,7 @@ class ScreenshotState:
         self.lock = asyncio.Lock()
 
     
-API_MODEL_SYSTEM_PROMPT = f"用{TTSModelConfig.text_language[0]}文对话。根据用户正在做的事情，你需要根据提供的信息以第一人称对用户进行调侃"    
+API_MODEL_SYSTEM_PROMPT = f"用{TTSModelConfig.text_language[0]}文对话。根据用户正在做的事情，你需要根据提供的信息以第一人称对用户进行调侃，禁止输出非对话文本。"    
 LOCAL_MODEL_SYSTEM_PROMPT = f"根据用户正在做的事情，你需要根据提供的信息以第一人称对用户进行调侃，不要输出讲话人称呼。对话要符合角色性格。"
 
 

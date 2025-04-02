@@ -3,15 +3,45 @@ from aioconsole import ainput
 from qwen_vl_3B_Instruct import Img2TextModel
 from model_hf_Qwen2d5 import ChatModel as LocalChatModel
 from model_from_api import APIChatModel
-from model_function_call import FunctionCallModel
+from model_intent import IntentModel
 from concurrent.futures import ThreadPoolExecutor
 import os
+import pygame
 import sys
 import time
 from config import *
 from multi_function import *
+from constant import SOUND_OBJ
+
+# chatModel = LocalChatModel(
+#     base_model=ChatModelConfig.base_model, 
+#     lora_path=ChatModelConfig.lora_path, 
+#     quantization=ChatModelConfig.quantization, 
+#     system_prompt=ChatModelConfig.system_prompt,
+#     temperature=ChatModelConfig.temperature,
+#     top_k=ChatModelConfig.top_k,
+#     top_p=ChatModelConfig.top_p,
+#     max_new_tokens=ChatModelConfig.max_new_tokens,
+#     repetition_penalty=ChatModelConfig.repetition_penalty
+# )
+
+chatModel = APIChatModel(
+    base_model=APIChatModelConfig.base_model, 
+    api_key=APIChatModelConfig.api_key,
+    base_url=APIChatModelConfig.base_url,
+    system_prompt=APIChatModelConfig.system_prompt,
+    temperature=APIChatModelConfig.temperature,
+    top_p=APIChatModelConfig.top_p,
+    max_new_tokens=APIChatModelConfig.max_new_tokens,
+    repetition_penalty=APIChatModelConfig.repetition_penalty,
+    role=APIChatModelConfig.role
+)
+img2textModel = Img2TextModel(Img2TextModelConfig.quantization)
+intentModel = IntentModel()
+chatModel.set_model_language(TTSModelConfig.text_language)
 
 CHAT_HISTORY = []
+
 
 async def recognize_screenshot(
     chatModel,
@@ -31,7 +61,7 @@ async def recognize_screenshot(
 async def read_user_inputs(
     chatModel,
     img2textModel,
-    funcCallModel
+    intentModel
 ):
     loop = asyncio.get_running_loop()
     global CHAT_HISTORY
@@ -52,7 +82,7 @@ async def read_user_inputs(
                 handle_user_inputs(
                     chatModel, 
                     img2textModel, 
-                    funcCallModel, 
+                    intentModel, 
                     user_inputs, 
                     CHAT_HISTORY, 
                     loop
@@ -65,41 +95,11 @@ async def main():
     print(f"\ninit time: {asyncio.get_running_loop().time()}")
 
     await asyncio.gather(
-         recognize_screenshot(chatModel, img2textModel),
-         read_user_inputs(chatModel, img2textModel, funcCallModel)
+        #  recognize_screenshot(chatModel, img2textModel),
+         read_user_inputs(chatModel, img2textModel, intentModel)
     )
 
 if __name__ == "__main__":
-
-    # chatModel = LocalChatModel(
-    #     base_model=ChatModelConfig.base_model, 
-    #     lora_path=ChatModelConfig.lora_path, 
-    #     quantization=ChatModelConfig.quantization, 
-    #     system_prompt=ChatModelConfig.system_prompt,
-    #     temperature=ChatModelConfig.temperature,
-    #     top_k=ChatModelConfig.top_k,
-    #     top_p=ChatModelConfig.top_p,
-    #     max_new_tokens=ChatModelConfig.max_new_tokens,
-    #     repetition_penalty=ChatModelConfig.repetition_penalty
-    # )
-
-
-    chatModel = APIChatModel(
-        base_model=APIChatModelConfig.base_model, 
-        api_key=APIChatModelConfig.api_key,
-        base_url=APIChatModelConfig.base_url,
-        system_prompt=APIChatModelConfig.system_prompt,
-        temperature=APIChatModelConfig.temperature,
-        top_p=APIChatModelConfig.top_p,
-        max_new_tokens=APIChatModelConfig.max_new_tokens,
-        repetition_penalty=APIChatModelConfig.repetition_penalty,
-        role=APIChatModelConfig.role
-    )
-    img2textModel = Img2TextModel(Img2TextModelConfig.quantization)
-    funcCallModel = FunctionCallModel()
-
-    chatModel.set_model_language(TTSModelConfig.text_language)
-
     asyncio.run(main())
 
     pass
