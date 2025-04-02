@@ -2,7 +2,7 @@ import fastapi
 from main import *
 import uvicorn
 from start_tts_kurisu import start_kurisu
-from interaction_webui_config import ChatModelResponse
+from config import ChatModelResponse
 
 app = fastapi.FastAPI()
 
