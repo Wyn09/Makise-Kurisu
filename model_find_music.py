@@ -16,7 +16,7 @@ filenames = [
 ]
 MUSIC_REPOSITORY = {i: n for i, n in enumerate(filenames)}
 
-SYSTEM_PROMPT = f"""在音乐库里找出用户要播放的音乐，返回:索引值，如果未找到则索引值为-1。只输出结果，禁止输出多余文本！
+SYSTEM_PROMPT = f"""在音乐库里找出用户要播放的音乐，返回:索引值(取值范围:0~{len(MUSIC_REPOSITORY)})，如果未找到则索引值为-1。只输出结果，禁止输出多余文本！
 音乐库:
 {MUSIC_REPOSITORY}
 例如:
@@ -86,6 +86,7 @@ class FindMusicModel:
     
 async def handle_inputs(model, query):
     index = await model.recognition(query)
+    print(MUSIC_REPOSITORY)
     print(model.response)
     print(index)
    
