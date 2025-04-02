@@ -6,7 +6,7 @@ import os
 import sounddevice as sd
 import soundfile as sf
 import shutil
-from constant import get_constant
+from interaction_webui_config import get_constant
 from preset import setup_reference
 from model_hf_DeepSeek_R1_Distill_Llama_8B import ChatModel
 from baidu_translate import translate

@@ -1,31 +1,31 @@
 import fastapi
 from main import *
 import uvicorn
-from tts_kurisu import start_tts
+from start_tts_kurisu import start_kurisu
+from interaction_webui_config import ChatModelResponse
 
 app = fastapi.FastAPI()
-start_tts()
+
 
 @app.post("/inputText")
 async def execute_inputText(user_inputs):
     loop = asyncio.get_running_loop()
-    response, translated_text = await handle_user_inputs(
+    await handle_user_inputs(
         chatModel, 
         img2textModel, 
         intentModel, 
-        user_inputs, 
-        CHAT_HISTORY, 
+        user_inputs,  
         loop
     )
 
-    if translated_text:
-        return {"output": f"{response}\n\t({translated_text})"}
+    if ChatModelResponse.outputs["translated_response"] != "": 
+        return {"output": f"{ChatModelResponse.outputs["response"]}\n\t({ChatModelResponse.outputs["translated_response"]})"}
     
-    return  {"output": f"{response}"}
+    return  {"output": f"{ChatModelResponse.outputs["response"]}"}
 
 
 
 if __name__ =="__main__":
-    uvicorn.run("deploy:app", workers=2)
+    uvicorn.run("deploy:app", workers=1)
     
     pass

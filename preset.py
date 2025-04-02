@@ -1,5 +1,5 @@
 import asyncio
-from constant import get_constant
+from interaction_webui_config import get_constant
 from set_component import set_weights, set_cut_method, set_language, set_ref_language, set_temperature, set_top_k, set_top_p
 
 REMOVE_PATH, CHARACTER, REF_AUDIO_TEXT, WEIGHTS_MODEL_PATH, REF_LANGUAGE_OPTIONS, LANGUAGE_OPTIONS, CUT_METHOD_OPTIONS = get_constant()

@@ -6,7 +6,7 @@ import os
 import sounddevice as sd
 import soundfile as sf
 import shutil
-from constant import get_constant
+from interaction_webui_config import get_constant
 from preset import setup_reference
 from model_hf_Qwen2d5 import ChatModel
 from baidu_translate import translate

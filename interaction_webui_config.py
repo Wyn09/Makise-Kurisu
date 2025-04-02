@@ -4,11 +4,6 @@
 """
 REMOVE_PATH = None
 
-class SoundObj:
-    def __init__(self, value=None):
-        self.value = value
-        
-SOUND_OBJ = SoundObj()
 
 CHARACTER = [
     "2B",

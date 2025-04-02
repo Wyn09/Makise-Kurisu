@@ -23,18 +23,18 @@ async def random_sleep_with_response(response, alpha=5):
 async def chatWithTTS(
         chatModel,
         text,
-        chat_history,
         text_language=TTSModelConfig.text_language,
         cut_punc=TTSModelConfig.cut_punc,
         top_k=TTSModelConfig.top_k,
         top_p=TTSModelConfig.top_p,
         temperature=TTSModelConfig.temperature,
-        speed=TTSModelConfig.speed,
+        speed=TTSModelConfig.speed
 ):
 
-    chat_history, response = await chatModel.chat_with_history(text, chat_history)
+    ChatModelResponse.outputs["chat_history"], ChatModelResponse.outputs["response"] = \
+    await chatModel.chat_with_history(text, ChatModelResponse.outputs["chat_history"])
     await synthesize_and_play(
-        response,     
+        ChatModelResponse.outputs["response"],     
         text_language=text_language,
         cut_punc=cut_punc,
         top_k=top_k,
@@ -42,24 +42,23 @@ async def chatWithTTS(
         temperature=temperature,
         speed=speed,
     )
-    print(f"\nResponse:\n\t{response}")
-    
-    translated_text = None
+    print(f"\nResponse:\n\t{ChatModelResponse.outputs["response"]}")
+    # print(f"Length of chat_history:\t{int(len(ChatModelResponse.outputs["chat_history"]) // 2)}\n")
+
     # 如果是本地部署的Model，并且不是中文或者粤语，那么就调用翻译API
     if chatModel.language not in ["中文", "粤语", "中英混合"]:
-        translated_text = await translate(response.replace("\n", ""))
-        print(f"\n\t({translated_text})")
+        ChatModelResponse.outputs["translated_response"] = await translate(ChatModelResponse.outputs["response"].replace("\n", ""))
+        print(f"\n\t({ChatModelResponse.outputs["translated_response"]})")
 
-    if len(chat_history) >= 5:
-            chat_history = chat_history[-5:]
-    return response, translated_text
+    if len(ChatModelResponse.outputs["chat_history"]) >= ChatModelResponse.chat_history_length * 2:
+            ChatModelResponse.outputs["chat_history"] = ChatModelResponse.outputs["chat_history"][-ChatModelResponse.chat_history_length * 2:]
+
 
 
 
 async def chatWithImg(
     chatModel,
     img2textModel,
-    chat_history,
     user_inputs="",
     screenshot_folder_path=Img2TextModelConfig.screenshot_folder_path, 
     max_new_tokens=Img2TextModelConfig.max_new_tokens,
@@ -70,13 +69,12 @@ async def chatWithImg(
     # print("截图已保存在: ", img_file_path)
     text_of_img = await img2textModel.img2text(img_file_path, user_inputs=user_inputs, max_new_tokens=max_new_tokens)
     # print(f"\nText Of Img:\n\t{text_of_img}")
-    response = await chatWithTTS(chatModel, text_of_img + user_inputs, chat_history)
+    await chatWithTTS(chatModel, text_of_img + user_inputs)
 
-    # print(f"Length of chat_history:\t{len(chat_history)}\n")
+    # print(f"Length of chat_history:\t{len(ChatModelResponse.outputs["chat_history"])}\n")
 
     # 删除抓取的图片
     os.remove(img_file_path)
-    return response
 
 
 

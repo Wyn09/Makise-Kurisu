@@ -12,7 +12,7 @@ SLOTS_DICT = {
     "position": None,
     "time": "现在",
     "singer": None,
-    "music name": None,
+    "music name": "随机",
     "search content": None,
     "other": "true or false"
 }
@@ -29,10 +29,12 @@ INTENT_PROMPT = f"""槽位(slot):{SLOTS_DICT}
 [天气查询] {{"position":...,"time":...}}
 [看屏幕] {{"ohter":"true"}}
 [播放音乐] {{"singer":...,"music name":...}}
-[停止音乐]
+[停止音乐] {{"ohter":"true"}}
 [搜索内容] {{"search content":...}}
 [普通聊天] {{"ohter":"true"}}
-例如：input：杭州明天天气怎么样？output：[天气查询] {{"position":"杭州","time":"明天"}} """
+例如：input：杭州明天天气怎么样？output：[天气查询] {{"position":"杭州","time":"明天"}} 
+input: 我想听音乐 output: [播放音乐] {{"singer":None,"music name":"随机"}}
+input: 天气怎么样 output：[天气查询] {{"position":None,"time":"现在"}} """
 
 
 
@@ -74,30 +76,7 @@ class IntentModel:
             
         finally:
             return self.intent
-
-    # async def function_call(self, chatModel, img2textModel, inputs):
-    #     self.recognition(inputs)
-    #     if self.intent == "天气查询":
-    #         print("今天天气不错哦，温度23度，微微春风，很适合出行呢！")
-    #         return 
         
-    #     elif self.intent == "看屏幕":
-    #         img_path = screenshot()
-    #         text_of_img = img2textModel.img2text(img_path)
-
-    #         return 
-
-
-    #     elif self.intent == "播放音乐":
-    #         print("播放《罗密欧与朱丽叶》")
-    #         return
-
-    #     elif self.intent == "搜索内容":
-    #         print("搜索相关内容")
-    #         return
-
-    #     else:
-    #         return "普通聊天"
         
     async def chat_completion(self, messages):
         try:

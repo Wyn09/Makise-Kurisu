@@ -4,14 +4,11 @@ from qwen_vl_3B_Instruct import Img2TextModel
 from model_hf_Qwen2d5 import ChatModel as LocalChatModel
 from model_from_api import APIChatModel
 from model_intent import IntentModel
-from concurrent.futures import ThreadPoolExecutor
 import os
-import pygame
-import sys
 import time
 from config import *
 from multi_function import *
-from constant import SOUND_OBJ
+
 
 # chatModel = LocalChatModel(
 #     base_model=ChatModelConfig.base_model, 
@@ -40,20 +37,16 @@ img2textModel = Img2TextModel(Img2TextModelConfig.quantization)
 intentModel = IntentModel()
 chatModel.set_model_language(TTSModelConfig.text_language)
 
-CHAT_HISTORY = []
-
 
 async def recognize_screenshot(
     chatModel,
     img2textModel
 ):
-    global CHAT_HISTORY
     loop = asyncio.get_running_loop()
     asyncio.create_task(
         chatWithImg_sleep_correction(
             chatModel,
             img2textModel,
-            CHAT_HISTORY,
             loop
         )
     )
@@ -64,7 +57,6 @@ async def read_user_inputs(
     intentModel
 ):
     loop = asyncio.get_running_loop()
-    global CHAT_HISTORY
     while True:
         user_inputs = await ainput("🤗 >> ")
         user_inputs = user_inputs.strip().lower()
@@ -74,17 +66,17 @@ async def read_user_inputs(
                 print(x, end=" ")
                 time.sleep(0.5)
             # 当检测到退出命令时，结束进程
+            # print(ChatModelResponse.outputs["chat_history"])
             os._exit(0)
         else:
             print(f"🤓 : {user_inputs}")
-
+        
             asyncio.create_task(
                 handle_user_inputs(
                     chatModel, 
                     img2textModel, 
                     intentModel, 
                     user_inputs, 
-                    CHAT_HISTORY, 
                     loop
                 )
             )
