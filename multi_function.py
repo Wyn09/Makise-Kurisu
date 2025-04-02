@@ -18,6 +18,7 @@ async def functionCall_or_not(
     outputs = await intentModel.recognition(user_inputs[3:])  
     # print(outputs)
     
+
     try:
         intent = outputs.split(" ")[0]
         slots_dict = eval(outputs.split("]")[-1].strip())
@@ -30,6 +31,7 @@ async def functionCall_or_not(
         else:
             return False 
         return True
+    
     except Exception as e:
         print(f"\n提供信息不完整:{slots_dict}\n")
         prfix_prompt = f"用户意图:{intent}，但提供信息不完整:{slots_dict}。"

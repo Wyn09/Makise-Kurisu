@@ -5,6 +5,7 @@ from start_tts_kurisu import start_kurisu
 from config import ChatModelResponse
 
 app = fastapi.FastAPI()
+start_kurisu()
 
 
 @app.post("/inputText")
