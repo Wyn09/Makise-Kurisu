@@ -1,144 +1,32 @@
-from openai import AsyncOpenAI
-from dotenv import load_dotenv, find_dotenv
-import os
 import asyncio
-from aioconsole import ainput
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+import os
 import json
 from typing import Optional, Dict
 from contextlib import AsyncExitStack
-
+from openai import OpenAI
+from dotenv import load_dotenv, find_dotenv
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
 
 load_dotenv(find_dotenv())
 
-class APIChatModel:
 
-    def __init__(self,
-            base_model="GLM-4-Flash",
-            api_key=os.getenv("ZHIPU_API_KEY"),
-            base_url=os.getenv("ZHIPU_API_KEY_URL"),
-            system_prompt="",
-            temperature=1.0,
-            top_p=0.8,
-            max_new_tokens=128,
-            repetition_penalty=1.2,
-            role="kurisu"
-        ):
-
-        self.client = AsyncOpenAI(  # 使用异步客户端
-            api_key=api_key,
-            base_url=base_url
-        )
-        self.model = base_model
-        self.temperature = temperature
-        self.top_p = top_p
-        self.max_new_tokens = max_new_tokens
-        self.repetition_penalty = repetition_penalty
-        self.language = "中文"
-        self.system_prompt = system_prompt
-        self.role = role
-        self.sys_prompt_dic = {
-            "kurisu": {
-                "中文": r"./system_prompts/Kurisu_sys_prompt_ZH.txt",
-                "粤语": r"./system_prompts/Kurisu_sys_prompt_ZH.txt",
-                "英文": r"./system_prompts/Kurisu_sys_prompt_EN.txt",
-                "日文": r"./system_prompts/Kurisu_sys_prompt_JP.txt",
-                "中英混合": r"./system_prompts/Kurisu_sys_prompt_ZH.txt",
-                "日英混合": r"./system_prompts/Kurisu_sys_prompt_JP.txt",
-                "多语种混合": r"./system_prompts/Kurisu_sys_prompt_ZH.txt"
-            },
-            "2b":{
-                "中文": r"./system_prompts/2B_sys_prompt_ZH.txt",
-                "粤语": r"./system_prompts/2B_sys_prompt_ZH.txt",
-                "英文": r"./system_prompts/2B_sys_prompt_EN.txt",
-                "日文": r"./system_prompts/2B_sys_prompt_JP.txt",
-                "中英混合": r"./system_prompts/2B_sys_prompt_ZH.txt",
-                "日英混合": r"./system_prompts/2B_sys_prompt_JP.txt",
-                "多语种混合": r"./system_prompts/2B_sys_prompt_ZH.txt"
-            }
-        }
-    
+class MultiServerMCPClient:
+    def __init__(self):
+        """管理多个 MCP 服务器的客户端"""
         self.exit_stack = AsyncExitStack()
+        self.openai_api_key = os.getenv("ZHIPU_API_KEY")
+        self.base_url = os.getenv("ZHIPU_API_KEY_URL")
+        self.model = "GLM-4-Flash"
+        if not self.openai_api_key:
+            raise ValueError("❌ 未找到 OPENAI_API_KEY，请在 .env 文件中配置")
+        # 初始化 OpenAI Client
+        self.client = OpenAI(api_key=self.openai_api_key, base_url=self.base_url)
         # 存储 (server_name -> MCP ClientSession) 映射
         self.sessions: Dict[str, ClientSession] = {}
         # 存储工具信息
         self.tools_by_session: Dict[str, list] = {}  # 每个 session 的 tools 列表
         self.all_tools = []  # 合并所有工具的列表
-        
-        
-
-    async def post_init(self):
-        # 服务器脚本
-        servers = {
-            # "write": "./mcp-server/write_server.py",
-            "WeatherServer": "./mcp-server/weather_server.py",
-            # "SQLServer": "./mcp-server/SQL_server.py",
-            "PythonServer": "./mcp-server/python_server.py"
-        }
-    
-        try:
-            await self.connect_to_servers(servers)
-            # await self.chat_loop()
-        except Exception as e:
-            print("post_init报错: ", e)
-
-    async def chat_with_history(self, query, history=[]):
-        # def build_multiturn_prompt(history, query):
-        #     messages = [{"role": "system", "content": self.system_prompt}]
-        #     for message_dict in history:
-        #         messages += [message_dict]
-        #     messages += [{"role": "user", "content": query}]
-        #     return messages
-        
-        # messages = build_multiturn_prompt(history, query)
-
-        # response = await self.chat_completion(messages)  # 异步等待响应
-        # response = response.choices[0].message.content.replace("\n\n","")
-
-        ## 这一步是否重复加入了user记录？
-        # history.extend([
-        #     {"role": "user", "content": query},
-        #     {"role": "assistant", "content": response}
-        # ])
-
-        ## 改成这样赋值
-        # history.append({"role": "assistant", "content": response}) 
-        # return history, response
-
-        try:
-            history.append({"role": "user", "content": query})
-            # print(messages)
-            response = await self.chat_base(history)
-            result = response.choices[0].message.content.replace("\n\n","")
-            history.append({"role": "assistant", "content": result})
-
-        except Exception as e:
-            print(f"\nchat_with_history调用过程出错: {e}")
-            return history, ""
-        
-        return history, result
-
-
-
-
-    def set_model_language(self, language="中文"):
-        self.language = language
-        with open(self.sys_prompt_dic[self.role][language], "r", encoding="utf-8") as f:
-            self.system_prompt += "".join(f.readlines())
-
-    async def chat_completion(self, messages):  # 异步方法
-        res = await self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            temperature=self.temperature,
-            top_p=self.top_p,
-            max_tokens=self.max_new_tokens,
-            frequency_penalty=self.repetition_penalty,
-        )
-        return res
-
-    # 以下是mcp-client相关函数
 
     async def connect_to_servers(self, servers: dict):
         """
@@ -233,7 +121,7 @@ class APIChatModel:
 
     async def chat_base(self, messages: list) -> list:
         # messages = [{"role": "user", "content": query}]
-        response = await self.client.chat.completions.create(
+        response = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
             tools=self.all_tools
@@ -243,7 +131,7 @@ class APIChatModel:
                 messages = await self.create_function_response_messages(
                     messages, response
                 )
-                response = await self.client.chat.completions.create(
+                response = self.client.chat.completions.create(
                     model=self.model,
                     messages=messages,
                     tools=self.all_tools
@@ -279,7 +167,7 @@ class APIChatModel:
         """
         messages = [{"role": "user", "content": user_query}]
         # 第一次请求
-        response = await self.client.chat.completions.create(
+        response = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
             tools=self.all_tools
@@ -305,7 +193,7 @@ class APIChatModel:
                 "tool_call_id": tool_call.id,
             })
             # 第二次请求，让模型整合工具结果，生成最终回答
-            response = await self.client.chat.completions.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages
             )
@@ -329,52 +217,44 @@ class APIChatModel:
         print(resp)
         return resp.content if len(resp.content) > 0 else "工具执行无输出"
 
-    # async def chat_loop(self):
-    #     print("\n🤖 多服务器 MCP + 最新 Function Calling 客户端已启动！输入 'quit' 退出。")
-    #     messages = []
-    #     while True:
-    #         query = input("\n你: ").strip()
-    #         if query.lower() == "quit":
-    #             break
-    #         try:
-    #             messages.append({"role": "user", "content": query})
-    #             messages = messages[-20:]
-    #             # print(messages)
-    #             response = await self.chat_base(messages)
-    #             messages.append(response.choices[0].message.model_dump())
-    #             result = response.choices[0].message.content
-    #             print(f"\nAI: {result}")
-    #         except Exception as e:
-    #             print(f"\n调用过程出错: {e}")
+    async def chat_loop(self):
+        print("\n🤖 多服务器 MCP + 最新 Function Calling 客户端已启动！输入 'quit' 退出。")
+        messages = []
+        while True:
+            query = input("\n你: ").strip()
+            if query.lower() == "quit":
+                break
+            try:
+                messages.append({"role": "user", "content": query})
+                messages = messages[-20:]
+                # print(messages)
+                response = await self.chat_base(messages)
+                messages.append(response.choices[0].message.model_dump())
+                result = response.choices[0].message.content
+                print(f"\nAI: {result}")
+            except Exception as e:
+                print(f"\n调用过程出错: {e}")
 
     async def cleanup(self):
         # 关闭所有资源
         await self.exit_stack.aclose()
 
 
-
-
-async def handle_inputs(model, query, history):
-    history, response = await model.chat_with_history(query, history)
-    print(response)
-    
-    
 async def main():
-    model = APIChatModel(role="2b")
-    model.set_model_language("中文")
-    await model.post_init()
+    # 服务器脚本
+    servers = {
+        # "write": "write_server.py",
+        "WeatherServer": "../mcp-server/weather_server.py",
+        # "SQLServer": "sql_server.py",
+        "PythonServer": "../mcp-server/python_server.py"
+    }
+    client = MultiServerMCPClient()
+    try:
+        await client.connect_to_servers(servers)
+        await client.chat_loop()
+    finally:
+        await client.cleanup()
 
-    # 这里历史记录改成了提前传入系统提示词
-    history = [{"role": "system", "content": model.system_prompt}]
-
-    while True:
-        query = await ainput(">> ")  # 异步输入
-        if query.lower() == "exit":
-            # 这里要执行清理
-            await model.cleanup()
-            break
-        asyncio.create_task(handle_inputs(model, query, history))
-    print(history)   
 
 if __name__ == "__main__":
-    asyncio.run(main())  # 运行异步主函数
+    asyncio.run(main())

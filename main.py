@@ -33,9 +33,11 @@ chatModel = APIChatModel(
     repetition_penalty=APIChatModelConfig.repetition_penalty,
     role=APIChatModelConfig.role
 )
+
 img2textModel = Img2TextModel(Img2TextModelConfig.quantization)
 intentModel = IntentModel()
 chatModel.set_model_language(TTSModelConfig.text_language)
+ChatModelResponse.outputs["chat_history"].append({"role": "system", "content": chatModel.system_prompt})
 
 
 async def recognize_screenshot(
@@ -67,6 +69,7 @@ async def read_user_inputs(
                 time.sleep(0.5)
             # 当检测到退出命令时，结束进程
             # print(ChatModelResponse.outputs["chat_history"])
+            await chatModel.cleanup()
             os._exit(0)
         else:
             print(f"🤓 : {user_input}")
@@ -84,10 +87,11 @@ async def read_user_inputs(
 
 async def main():
     
+    await chatModel.post_init()
     print(f"\ninit time: {asyncio.get_running_loop().time()}")
 
     await asyncio.gather(
-         recognize_screenshot(chatModel, img2textModel),
+        #  recognize_screenshot(chatModel, img2textModel),
          read_user_inputs(chatModel, img2textModel, intentModel)
     )
 
