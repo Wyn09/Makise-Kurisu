@@ -9,13 +9,13 @@ async def functionCall_or_not(
     chatModel, 
     img2textModel,
     intentModel, 
-    user_inputs, 
+    user_input, 
     loop,
     freeze_time_factor=2
 ):
     asyncio.create_task(delay_screenshot_time_or_not(loop))
     
-    outputs = await intentModel.recognition(user_inputs[3:])  
+    outputs = await intentModel.recognition(user_input[3:])  
     # print(outputs)
     
 
@@ -23,7 +23,7 @@ async def functionCall_or_not(
         intent = outputs.split(" ")[0]
         slots_dict = eval(outputs.split("]")[-1].strip())
         assert all(v is not None for v in slots_dict.values()), "提供的信息不完整！"
-        await init_params(chatModel, img2textModel, user_inputs, slots_dict, loop, freeze_time_factor)
+        await init_params(chatModel, img2textModel, user_input, slots_dict, loop, freeze_time_factor)
         func_call_res = FUNCTION_CALL_MAPPING.get(intent, [False, None])
         if func_call_res[0]:
             # asyncio.create_task(func_call_res[1]())
@@ -48,7 +48,7 @@ async def functionCall_or_not(
         asyncio.create_task(
             delay_screenshot_time_or_not(loop, freeze_time=Img2TextModelConfig.freeze_time * freeze_time_factor)
         )
-        await chatWithTTS(chatModel, prfix_prompt + user_inputs)
+        await chatWithTTS(chatModel, prfix_prompt + user_input)
         return True
 
 
@@ -56,13 +56,13 @@ async def handle_user_inputs(
     chatModel, 
     img2textModel, 
     intentModel, 
-    user_inputs, 
+    user_input, 
     loop
 ):
-    user_inputs = "用户:" + user_inputs
-    res = await functionCall_or_not(chatModel, img2textModel, intentModel, user_inputs, loop)
+    user_input = "用户:" + user_input
+    res = await functionCall_or_not(chatModel, img2textModel, intentModel, user_input, loop)
     if not res:
-        await chatWithTTS(chatModel, user_inputs)
+        await chatWithTTS(chatModel, user_input)
 
 
 
@@ -70,7 +70,7 @@ async def execute_chatWithImg_sleep_correction(
     chatModel,
     img2textModel,
     loop,
-    user_inputs="",
+    user_input="",
     state=Img2TextModelConfig.state,
 ):
     async with state.lock:
@@ -79,7 +79,7 @@ async def execute_chatWithImg_sleep_correction(
 
             if wait_time <= 0:  # 到工作时间了
                 # print("Task A: Performing async IO...")
-                await chatWithImg(chatModel, img2textModel, user_inputs)
+                await chatWithImg(chatModel, img2textModel, user_input)
                 sleep_time = await get_random_sleep_time(ChatModelResponse.outputs["response"])
                 state.next_run_time = now + sleep_time  # 计划下次工作时间
                 return
@@ -113,7 +113,7 @@ async def chatWithImg_sleep_correction(
     chatModel,
     img2textModel,
     loop,
-    user_inputs="",
+    user_input="",
     init_sleep_time=Img2TextModelConfig.init_sleep_time,
     state=Img2TextModelConfig.state,
 ):
@@ -125,7 +125,7 @@ async def chatWithImg_sleep_correction(
                 chatModel,
                 img2textModel,
                 loop,
-                user_inputs="",
+                user_input="",
                 state=Img2TextModelConfig.state
             )
         

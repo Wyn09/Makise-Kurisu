@@ -35,7 +35,7 @@ class Img2TextModel:
 
         self.processor = AutoProcessor.from_pretrained(model_path)
 
-    async def img2text(self, input_path, user_inputs="", max_new_tokens=256, target_width=800, target_height=600):
+    async def img2text(self, input_path, user_input="", max_new_tokens=256, target_width=800, target_height=600):
     
         # 打开图像
         with Image.open(input_path) as img:
@@ -72,8 +72,8 @@ class Img2TextModel:
                     ],
                 }
             ]
-            if user_inputs != "":
-                messages.extend([{"role": "user", "content": user_inputs}])
+            if user_input != "":
+                messages.extend([{"role": "user", "content": user_input}])
 
             # Preparation for inference
             text = self.processor.apply_chat_template(

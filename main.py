@@ -58,9 +58,9 @@ async def read_user_inputs(
 ):
     loop = asyncio.get_running_loop()
     while True:
-        user_inputs = await ainput("🤗 >> ")
-        user_inputs = user_inputs.strip().lower()
-        if user_inputs in ["quit", "exit"]:
+        user_input = await ainput("🤗 >> ")
+        user_input = user_input.strip().lower()
+        if user_input in ["quit", "exit"]:
             print("\nExiting... ", end="")
             for x in "😱🐾🐾🐾":
                 print(x, end=" ")
@@ -69,14 +69,14 @@ async def read_user_inputs(
             # print(ChatModelResponse.outputs["chat_history"])
             os._exit(0)
         else:
-            print(f"🤓 : {user_inputs}")
+            print(f"🤓 : {user_input}")
         
             asyncio.create_task(
                 handle_user_inputs(
                     chatModel, 
                     img2textModel, 
                     intentModel, 
-                    user_inputs, 
+                    user_input, 
                     loop
                 )
             )
@@ -87,7 +87,7 @@ async def main():
     print(f"\ninit time: {asyncio.get_running_loop().time()}")
 
     await asyncio.gather(
-        #  recognize_screenshot(chatModel, img2textModel),
+         recognize_screenshot(chatModel, img2textModel),
          read_user_inputs(chatModel, img2textModel, intentModel)
     )
 

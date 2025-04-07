@@ -59,7 +59,7 @@ async def chatWithTTS(
 async def chatWithImg(
     chatModel,
     img2textModel,
-    user_inputs="",
+    user_input="",
     screenshot_folder_path=Img2TextModelConfig.screenshot_folder_path, 
     max_new_tokens=Img2TextModelConfig.max_new_tokens,
     
@@ -67,9 +67,9 @@ async def chatWithImg(
     print("*" * 80)
     img_file_path = screenshot(screenshot_folder_path)
     # print("截图已保存在: ", img_file_path)
-    text_of_img = await img2textModel.img2text(img_file_path, user_inputs=user_inputs, max_new_tokens=max_new_tokens)
+    text_of_img = await img2textModel.img2text(img_file_path, user_input=user_input, max_new_tokens=max_new_tokens)
     # print(f"\nText Of Img:\n\t{text_of_img}")
-    await chatWithTTS(chatModel, text_of_img + user_inputs)
+    await chatWithTTS(chatModel, text_of_img + user_input)
 
     # print(f"Length of chat_history:\t{len(ChatModelResponse.outputs["chat_history"])}\n")
 

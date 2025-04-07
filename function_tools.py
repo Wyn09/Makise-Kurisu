@@ -11,16 +11,16 @@ from model_find_music import FindMusicModel, FILE_PATHS, MUSIC_REPOSITORY
 class Params:
     chatModel = None
     img2textModel = None
-    user_inputs = None
+    user_input = None
     slots_dict = None
     loop = None
     freeze_time_factor = None
     prfix_prompt = ""
 
-async def init_params(chatModel, img2textModel, user_inputs, slots_dict, loop, freeze_time_factor):
+async def init_params(chatModel, img2textModel, user_input, slots_dict, loop, freeze_time_factor):
     Params.chatModel = chatModel
     Params.img2textModel = img2textModel
-    Params.user_inputs = user_inputs
+    Params.user_input = user_input
     Params.slots_dict = slots_dict
     Params.loop = loop
     Params.freeze_time_factor = freeze_time_factor
@@ -30,7 +30,7 @@ async def execute_weather_query():  #TODO
     asyncio.create_task(
         delay_screenshot_time_or_not(Params.loop, freeze_time=Img2TextModelConfig.freeze_time * Params.freeze_time_factor)
     )
-    await chatWithTTS(Params.chatModel, Params.prfix_prompt + Params.user_inputs)
+    await chatWithTTS(Params.chatModel, Params.prfix_prompt + Params.user_input)
 
 async def execute_screenshot():
     # 屏幕要延长auto screenshot多一点
@@ -38,14 +38,14 @@ async def execute_screenshot():
     asyncio.create_task(
         delay_screenshot_time_or_not(Params.loop, freeze_time=Img2TextModelConfig.freeze_time * Params.freeze_time_factor)
     )
-    await chatWithImg(Params.chatModel, Params.img2textModel, Params.user_inputs)
+    await chatWithImg(Params.chatModel, Params.img2textModel, Params.user_input)
 
 
 async def execute_music_play(): 
 
     async def find_music():
         model = FindMusicModel()
-        index = await model.recognition(Params.user_inputs)
+        index = await model.recognition(Params.user_input)
         return int(index)
 
     async def play():
@@ -77,7 +77,7 @@ async def execute_music_play():
     )
 
     await play()
-    await chatWithTTS(Params.chatModel, Params.prfix_prompt + Params.user_inputs)
+    await chatWithTTS(Params.chatModel, Params.prfix_prompt + Params.user_input)
     
 
 
@@ -96,7 +96,7 @@ async def execute_stop_music():
             delay_screenshot_time_or_not(Params.loop, freeze_time=Img2TextModelConfig.freeze_time * Params.freeze_time_factor)
         )
 
-    await chatWithTTS(Params.chatModel, Params.prfix_prompt + Params.user_inputs)
+    await chatWithTTS(Params.chatModel, Params.prfix_prompt + Params.user_input)
 
 
 async def execute_search_content(): #TODO
