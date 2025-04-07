@@ -61,8 +61,8 @@ class ChatModelConfig:
 
 class APIChatModelConfig:
     base_model = "GLM-4-Flash"  # GLM-4-Flash, deepseek-chat
-    api_key = os.getenv("ZHIPU_API_KEY")
-    base_url = os.getenv("ZHIPU_API_KEY_URL")
+    api_key = os.getenv("ZHIPU_API_KEY")    # ZHIPU_API_KEY, DEEPSEEK_API_KEY
+    base_url = os.getenv("ZHIPU_API_KEY_URL")   # ZHIPU_API_KEY_URL, ZHIPU_API_KEY_URL
     system_prompt = API_MODEL_SYSTEM_PROMPT
     temperature = 1.0
     top_p = 0.7

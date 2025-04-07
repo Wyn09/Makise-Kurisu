@@ -33,8 +33,18 @@ async def functionCall_or_not(
         return True
     
     except Exception as e:
-        print(f"\n提供信息不完整:{slots_dict}\n")
-        prfix_prompt = f"用户意图:{intent}，但提供信息不完整:{slots_dict}。"
+        prfix_prompt = ""
+        if intent[0] != "[" or intent[-1] != "]":
+            intent = "[普通聊天]"
+            slots_dict = '{"other":"true"}'
+            
+        try:
+            if not all(v is not None for v in slots_dict.values()):
+                print(f"\n拒绝用户请求，因为提供信息不完整:{slots_dict}\n")
+                prfix_prompt = f"用户意图:{intent}，但提供信息不完整:{slots_dict}。"
+        except Exception:
+            pass
+
         asyncio.create_task(
             delay_screenshot_time_or_not(loop, freeze_time=Img2TextModelConfig.freeze_time * freeze_time_factor)
         )
@@ -89,11 +99,8 @@ async def execute_chatWithImg_sleep_correction(
         state.next_run_time = loop.time() + sleep_time
 
 
-async def chatWithImg_sleep_correction(
-    chatModel,
-    img2textModel,
+async def init_next_run_time(
     loop,
-    user_inputs="",
     init_sleep_time=Img2TextModelConfig.init_sleep_time,
     state=Img2TextModelConfig.state,
 ):
@@ -102,6 +109,16 @@ async def chatWithImg_sleep_correction(
         if state.next_run_time is None:
             state.next_run_time = loop.time() + init_sleep_time
 
+async def chatWithImg_sleep_correction(
+    chatModel,
+    img2textModel,
+    loop,
+    user_inputs="",
+    init_sleep_time=Img2TextModelConfig.init_sleep_time,
+    state=Img2TextModelConfig.state,
+):
+
+    await init_next_run_time(loop, init_sleep_time, state)
     await asyncio.sleep(init_sleep_time)
     while True:     
         await execute_chatWithImg_sleep_correction(
