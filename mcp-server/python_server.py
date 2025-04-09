@@ -5,11 +5,13 @@ import numpy as np
 import pandas as pd
 import random
 from mcp.server.fastmcp import FastMCP
-
+import asyncio
+import matplotlib.pyplot as plt
 
 # 初始化 MCP 服务器
 mcp = FastMCP("PythonServer")
 USER_AGENT = "Pythonserver-app/1.0"
+
 
 @mcp.tool()
 async def python_inter(py_code: str):
@@ -18,37 +20,36 @@ async def python_inter(py_code: str):
     :param py_code: 字符串形式的Python代码，
     :return：代码运行的最终结果
     """    
-    wrapped_code = ""
-    global_vars_before = ""
-    __user_func__ = ""
-    line = ""
-
-    g = locals()
+    env = globals().copy()
+        # 创建一个全新的局部环境，包含__builtins__
+    env.update({
+        "__name__": "__main__",
+        "np": np,
+        "pd": pd,
+        "json": json,
+        "plt": plt
+    })
     
-
     try:
-        # 若是表达式，直接运行并返回
-        result = eval(py_code, g)
+        # 尝试将代码当作表达式执行（例如 "3+4"）
+        result = eval(py_code, env)
         return json.dumps(str(result), ensure_ascii=False)
-
-
     except Exception:
-        global_vars_before = set(g.keys())
-        print(f"global_vars_before: {global_vars_before}")
+        global_vars_before = set(env.keys())
+        # 如果当作表达式执行失败，则尝试用exec执行代码
         try:
-            # 检查用户代码是否包含 return 语句
+            # 如果代码中含有 return 关键字，则将代码包装为一个函数，方便获取返回值
             if "return" in py_code:
-                # 构造包装函数，将用户代码整体缩进
                 wrapped_code = "def __user_func__():\n"
                 for line in py_code.splitlines():
                     wrapped_code += "\t" + line + "\n"
                 wrapped_code += "\nresult = __user_func__()\n"
                 py_code = wrapped_code
-            # 执行代码
-            exec(py_code, g)
+
+            exec(py_code, env)
         except Exception as e:
             return json.dumps(f"代码执行时报错: {e}", ensure_ascii=False)
-        global_vars_after = set(g.keys())
+        global_vars_after = set(env.keys())
         new_vars = global_vars_after - global_vars_before
         print(f"new_vars: {new_vars}")
         if new_vars:
@@ -56,10 +57,10 @@ async def python_inter(py_code: str):
             safe_result = {}
             for var in new_vars:
                 try:
-                    json.dumps(g[var]) # 尝试序列化，确保可以转换为 JSON
-                    safe_result[var] = g[var]
+                    json.dumps(env[var]) # 尝试序列化，确保可以转换为 JSON
+                    safe_result[var] = env[var]
                 except (TypeError, OverflowError):
-                    safe_result[var] = str(g[var]) # 如果不能序列化，则转换为字符串
+                    safe_result[var] = str(env[var]) # 如果不能序列化，则转换为字符串
 
             return json.dumps(safe_result, ensure_ascii=False)
         else:

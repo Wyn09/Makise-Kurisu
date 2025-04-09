@@ -15,9 +15,9 @@ load_dotenv(find_dotenv())
 class APIChatModel:
 
     def __init__(self,
-            base_model="GLM-4-Flash",
-            api_key=os.getenv("ZHIPU_API_KEY"),
-            base_url=os.getenv("ZHIPU_API_KEY_URL"),
+            base_model="deepseek-chat",
+            api_key=os.getenv("DEEPSEEK_API_KEY"),
+            base_url=os.getenv("DEEPSEEK_API_KEY_URL"),
             system_prompt="",
             temperature=1.0,
             top_p=0.8,
@@ -74,7 +74,7 @@ class APIChatModel:
             # "write": "./mcp-server/write_server.py",
             "WeatherServer": "./mcp-server/weather_server.py",
             # "SQLServer": "./mcp-server/SQL_server.py",
-            "PythonServer": "./mcp-server/python_server.py"
+            "PythonServer": "./mcp-server/Python_server.py"
         }
     
         try:
@@ -109,7 +109,7 @@ class APIChatModel:
         try:
             history.append({"role": "user", "content": query})
             # print(messages)
-            response = await self.chat_base(history)
+            response = await self.chat_base(history.copy())
             result = response.choices[0].message.content.replace("\n\n","")
             history.append({"role": "assistant", "content": result})
 
@@ -326,26 +326,8 @@ class APIChatModel:
             return f"找不到服务器: {server_name}"
         # 执行 MCP 工具
         resp = await session.call_tool(tool_name, tool_args)
-        print(resp)
+        # print(resp)
         return resp.content if len(resp.content) > 0 else "工具执行无输出"
-
-    # async def chat_loop(self):
-    #     print("\n🤖 多服务器 MCP + 最新 Function Calling 客户端已启动！输入 'quit' 退出。")
-    #     messages = []
-    #     while True:
-    #         query = input("\n你: ").strip()
-    #         if query.lower() == "quit":
-    #             break
-    #         try:
-    #             messages.append({"role": "user", "content": query})
-    #             messages = messages[-20:]
-    #             # print(messages)
-    #             response = await self.chat_base(messages)
-    #             messages.append(response.choices[0].message.model_dump())
-    #             result = response.choices[0].message.content
-    #             print(f"\nAI: {result}")
-    #         except Exception as e:
-    #             print(f"\n调用过程出错: {e}")
 
     async def cleanup(self):
         # 关闭所有资源
