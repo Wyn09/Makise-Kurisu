@@ -7,6 +7,8 @@ import random
 from mcp.server.fastmcp import FastMCP
 import asyncio
 import matplotlib.pyplot as plt
+import os
+import glob
 
 # 初始化 MCP 服务器
 mcp = FastMCP("PythonServer")
@@ -16,9 +18,13 @@ USER_AGENT = "Pythonserver-app/1.0"
 @mcp.tool()
 async def python_inter(py_code: str):
     """
-    专门用于执行.py文件的python代码，并获取最终查询或处理结果。必须将结果赋值给一个变量。
-    :param py_code: 字符串形式的Python代码，
-    :return：代码运行的最终结果
+    1.专门用于执行.py文件的python代码，并获取最终查询或处理结果  
+    2.如果用户要求绘图，禁止展示图片，直接将图片保存到本地，并告知用户图片已保存和保存的路径  
+    3.必须将结果赋值给一个变量result  
+    4.如果用户要求删除或修改文件，则再次询问用户删除或修改的文件的路径并要求用户输入"确认执行"，才可执行删除或修改文件代码！执行代码完毕后告知用户路径和删除或修改的文件  
+
+    :param str py_code: 字符串形式的Python代码，
+    :return: 代码运行的最终结果
     """    
     env = globals().copy()
         # 创建一个全新的局部环境，包含__builtins__
@@ -27,7 +33,9 @@ async def python_inter(py_code: str):
         "np": np,
         "pd": pd,
         "json": json,
-        "plt": plt
+        "plt": plt,
+        "os": os,
+        "glob": glob
     })
     
     try:

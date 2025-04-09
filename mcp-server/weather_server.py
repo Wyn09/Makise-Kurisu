@@ -76,7 +76,8 @@ def format_weather(data: dict[str, Any] | str) -> str:
 async def query_weather(city: str) -> str:
     """
     输入指定城市的英文名称，返回今日天气查询结果。
-    :param city: 城市名称（需使用英文）
+
+    :param str city: 城市名称（需使用英文）
     :return: 格式化后的天气信息
     """
     data = await fetch_weather(city)

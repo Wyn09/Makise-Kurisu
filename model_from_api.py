@@ -72,9 +72,10 @@ class APIChatModel:
         # 服务器脚本
         servers = {
             # "write": "./mcp-server/write_server.py",
-            "WeatherServer": "./mcp-server/weather_server.py",
+            "WeatherServer": "./mcp-server/Weather_server.py",
             # "SQLServer": "./mcp-server/SQL_server.py",
-            "PythonServer": "./mcp-server/Python_server.py"
+            "PythonServer": "./mcp-server/Python_server.py",
+            "EmailServer": "./mcp-server/Email_server.py"
         }
     
         try:
@@ -239,7 +240,8 @@ class APIChatModel:
             tools=self.all_tools
         )
         if response.choices[0].finish_reason == "tool_calls":
-            while True:
+            
+            for _ in range(10): # 限制重试次数
                 messages = await self.create_function_response_messages(
                     messages, response
                 )
@@ -326,7 +328,7 @@ class APIChatModel:
             return f"找不到服务器: {server_name}"
         # 执行 MCP 工具
         resp = await session.call_tool(tool_name, tool_args)
-        # print(resp)
+        print(f"{resp}\n")
         return resp.content if len(resp.content) > 0 else "工具执行无输出"
 
     async def cleanup(self):
