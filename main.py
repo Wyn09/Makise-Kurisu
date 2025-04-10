@@ -58,34 +58,36 @@ async def read_user_inputs(
     img2textModel,
     intentModel
 ):
-    loop = asyncio.get_running_loop()
-    while True:
-        user_input = await ainput("🤗 >> ")
-        user_input = user_input.strip().lower()
-        if user_input in ["quit", "exit"]:
-            print("\nExiting... ", end="")
-            for x in "😱🐾🐾🐾":
-                print(x, end=" ")
-                time.sleep(0.5)
+    try:
+        loop = asyncio.get_running_loop()
+        while True:
+            user_input = await ainput("🤗 >> ")
+            user_input = user_input.strip().lower()
+            if user_input in ["quit", "exit"]:
+                print("\nExiting... ", end="")
+                for x in "😱🐾🐾🐾":
+                    print(x, end=" ")
+                    time.sleep(0.5)
 
-            await chatModel.cleanup()
-            os._exit(0)
+                await chatModel.cleanup()
+                os._exit(0)
 
-
-            break
-
-        else:
-            print(f"🤓 : {user_input}")
-        
-            asyncio.create_task(
-                handle_user_inputs(
-                    chatModel, 
-                    img2textModel, 
-                    intentModel, 
-                    user_input, 
-                    loop
+            else:
+                print(f"🤓 : {user_input}")
+            
+                asyncio.create_task(
+                    handle_user_inputs(
+                        chatModel, 
+                        img2textModel, 
+                        intentModel, 
+                        user_input, 
+                        loop
+                    )
                 )
-            )
+
+    except Exception as e:
+        # print(e)
+        pass
 
 
 async def main():
