@@ -10,6 +10,9 @@ from typing import Optional, Dict
 from contextlib import AsyncExitStack
 from datetime import datetime
 from utils import get_now_datetime
+from qwen_vl_3B_Instruct import Img2TextModel
+import config
+from bridge_flow import SHARE_STATE
 
 
 load_dotenv(find_dotenv())
@@ -77,7 +80,10 @@ class APIChatModel:
             "WeatherServer": "./mcp-server/Weather_server.py",
             # "SQLServer": "./mcp-server/SQL_server.py",
             "PythonServer": "./mcp-server/Python_server.py",
-            "EmailServer": "./mcp-server/Email_server.py"
+            "EmailServer": "./mcp-server/Email_server.py",
+            "SearchServer": "./mcp-server/Search_server.py",
+            "MusicServer": "./mcp-server/Music_server.py",
+            # "ScreenshotServer": "./mcp-server/Screenshot_server.py"
         }
     
         try:
@@ -87,28 +93,6 @@ class APIChatModel:
             print("post_init报错: ", e)
 
     async def chat_with_history(self, query, history=[]):
-        # def build_multiturn_prompt(history, query):
-        #     messages = [{"role": "system", "content": self.system_prompt}]
-        #     for message_dict in history:
-        #         messages += [message_dict]
-        #     messages += [{"role": "user", "content": query}]
-        #     return messages
-        
-        # messages = build_multiturn_prompt(history, query)
-
-        # response = await self.chat_completion(messages)  # 异步等待响应
-        # response = response.choices[0].message.content.replace("\n\n","")
-
-        ## 这一步是否重复加入了user记录？
-        # history.extend([
-        #     {"role": "user", "content": query},
-        #     {"role": "assistant", "content": response}
-        # ])
-
-        ## 改成这样赋值
-        # history.append({"role": "assistant", "content": response}) 
-        # return history, response
-
         try:
             history.append({"role": "user", "content": "(" + str(await get_now_datetime())+") user:" + query})
             # print(messages)
@@ -354,12 +338,21 @@ async def main():
     model = APIChatModel(role="2b", system_prompt="")
     model.set_model_language("中文")
     await model.post_init()
+    # 这里要在config里注册一下 
+    config.APIChatModelConfig.mdoel.append(model)
 
     # 这里历史记录改成了提前传入系统提示词
     history = [{"role": "system", "content": model.system_prompt}]
 
+    # # 如果执行屏幕识别也要加载vl model 
+    # img2textModel = Img2TextModel(config.Img2TextModelConfig.quantization)
+    # # 这里要在config里注册一下 
+    # config.Img2TextModelConfig.model.append(img2textModel)
+
     while True:
         query = await ainput(">> ")  # 异步输入
+        # 这里也要传入
+        SHARE_STATE.user_input[0] = query
         if query.lower() == "exit":
             # 这里要执行清理
             await model.cleanup()

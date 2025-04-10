@@ -8,18 +8,17 @@ import os
 import time
 from config import *
 from multi_function import *
-from anyio import create_task_group
 
 # chatModel = LocalChatModel(
-#     base_model=ChatModelConfig.base_model, 
-#     lora_path=ChatModelConfig.lora_path, 
-#     quantization=ChatModelConfig.quantization, 
-#     system_prompt=ChatModelConfig.system_prompt,
-#     temperature=ChatModelConfig.temperature,
-#     top_k=ChatModelConfig.top_k,
-#     top_p=ChatModelConfig.top_p,
-#     max_new_tokens=ChatModelConfig.max_new_tokens,
-#     repetition_penalty=ChatModelConfig.repetition_penalty
+#     base_model=LocalChatModelConfig.base_model, 
+#     lora_path=LocalChatModelConfig.lora_path, 
+#     quantization=LocalChatModelConfig.quantization, 
+#     system_prompt=LocalChatModelConfig.system_prompt,
+#     temperature=LocalChatModelConfig.temperature,
+#     top_k=LocalChatModelConfig.top_k,
+#     top_p=LocalChatModelConfig.top_p,
+#     max_new_tokens=LocalChatModelConfig.max_new_tokens,
+#     repetition_penalty=LocalChatModelConfig.repetition_penalty
 # )
 
 chatModel = APIChatModel(
@@ -38,6 +37,11 @@ img2textModel = Img2TextModel(Img2TextModelConfig.quantization)
 intentModel = IntentModel()
 chatModel.set_model_language(TTSModelConfig.text_language)
 ChatModelResponse.outputs["chat_history"].append({"role": "system", "content": chatModel.system_prompt})
+
+APIChatModelConfig.mdoel.append(chatModel)
+Img2TextModelConfig.model.append(img2textModel)
+
+
 
 
 async def recognize_screenshot(
@@ -62,8 +66,8 @@ async def read_user_inputs(
         loop = asyncio.get_running_loop()
         while True:
             user_input = await ainput("🤗 >> ")
-            user_input = user_input.strip().lower()
-            if user_input in ["quit", "exit"]:
+            user_input = user_input.strip()
+            if user_input.lower() in ["quit", "exit"]:
                 print("\nExiting... ", end="")
                 for x in "😱🐾🐾🐾":
                     print(x, end=" ")
@@ -74,7 +78,7 @@ async def read_user_inputs(
 
             else:
                 print(f"🤓 : {user_input}")
-            
+
                 asyncio.create_task(
                     handle_user_inputs(
                         chatModel, 
@@ -96,13 +100,14 @@ async def main():
         print(f"\ninit time: {asyncio.get_running_loop().time()}")
         
         await asyncio.gather(
-            #  recognize_screenshot(chatModel, img2textModel),
+             recognize_screenshot(chatModel, img2textModel),
             read_user_inputs(chatModel, img2textModel, intentModel)
         )
     except asyncio.CancelledError as e:
         print(e)
     finally:
         await chatModel.cleanup()
+
 
 if __name__ == "__main__":
     try:

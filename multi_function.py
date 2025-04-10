@@ -16,13 +16,13 @@ async def functionCall_or_not(
     asyncio.create_task(delay_screenshot_time_or_not(loop))
     
     outputs = await intentModel.recognition(user_input)  
-    # print(outputs)
+    print(f"\nintent: {outputs}\n")
     
 
     try:
         intent = outputs.split(" ")[0]
         slots_dict = eval(outputs.split("]")[-1].strip())
-        assert all(v is not None for v in slots_dict.values()), "提供的信息不完整！"
+        # assert all(v is not None for v in slots_dict.values()), "提供的信息不完整！"
         await init_params(chatModel, img2textModel, user_input, slots_dict, loop, freeze_time_factor)
         func_call_res = FUNCTION_CALL_MAPPING.get(intent, [False, None])
         if func_call_res[0]:
@@ -38,12 +38,12 @@ async def functionCall_or_not(
             intent = "[普通聊天]"
             slots_dict = '{"other":"true"}'
             
-        try:
-            if not all(v is not None for v in slots_dict.values()):
-                print(f"\n拒绝用户请求，因为提供信息不完整:{slots_dict}\n")
-                prfix_prompt = f"用户意图:{intent}，但提供信息不完整:{slots_dict}。"
-        except Exception:
-            pass
+        # try:
+        #     if not all(v is not None for v in slots_dict.values()):
+        #         print(f"\n拒绝用户请求，因为提供信息不完整:{slots_dict}\n")
+        #         prfix_prompt = f"用户意图:{intent}，但提供信息不完整:{slots_dict}。"
+        # except Exception:
+        #     pass
 
         asyncio.create_task(
             delay_screenshot_time_or_not(loop, freeze_time=Img2TextModelConfig.freeze_time * freeze_time_factor)

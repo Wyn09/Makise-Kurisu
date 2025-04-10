@@ -1,6 +1,7 @@
 import os
 import threading
 import asyncio
+import glob
 
 
 class TTSModelConfig:
@@ -47,17 +48,19 @@ class Img2TextModelConfig:
     max_new_tokens = 256
     state = ScreenshotState()
     freeze_time = 18
+    model = []  
 
-class ChatModelConfig:
+class LocalChatModelConfig:
     base_model = r"../../pretrained_models/Qwen/Qwen2.5-3B-Instruct"
     lora_path = None
     quantization = "8bit" 
     system_prompt = LOCAL_MODEL_SYSTEM_PROMPT
-    temperature=1.0
-    top_k=20
-    top_p=0.8
-    max_new_tokens=80
-    repetition_penalty=1.2
+    temperature = 1.0
+    top_k = 20
+    top_p = 0.8
+    max_new_tokens = 80
+    repetition_penalty = 1.2
+    model = []
 
 class APIChatModelConfig:
     base_model = "deepseek-chat"  # GLM-4-Flash, deepseek-chat
@@ -69,6 +72,7 @@ class APIChatModelConfig:
     max_new_tokens = 160
     repetition_penalty = 1.4
     role = "kurisu"
+    mdoel = []
 
 
 class SoundObj:
@@ -84,4 +88,14 @@ class ChatModelResponse:
     
     chat_history_length = 10
 
+
+
+
 MUSIC_FILE_FOLDER = r"./music/*"
+FILE_PATHS = glob.glob(MUSIC_FILE_FOLDER)
+# 提取纯文件名（不带后缀）
+filenames = [
+    os.path.splitext(os.path.basename(path))[0]  # 分割路径并去除扩展名
+    for path in FILE_PATHS
+]
+MUSIC_REPOSITORY = {i: n for i, n in enumerate(filenames)}

@@ -9,25 +9,16 @@ load_dotenv(find_dotenv())
 
 
 SLOTS_DICT = {
-    "singer": None,
-    "music name": "随机",
     "other": "true or false"
 }
 
 INTENT_PROMPT = f"""槽位(slot):{SLOTS_DICT}
 用户会有以下意图(intent):
 1.[看屏幕]: 例如："帮我看看这是什么?", "你看到了什么？", "我的屏幕上有什么？", "哇！你看！"......
-2.[播放音乐]
-3.[停止音乐]
-4.[普通聊天]
+2.[普通聊天]
 根据用户的输入，输出意图和对应的槽位，未提取到槽位则保持默认值，只输出给定格式的结果，禁止输出其他文本！
 [看屏幕] {{"ohter":"true"}}
-[播放音乐] {{"singer":...,"music name":...}}
-[停止音乐] {{"ohter":"true"}}
-[普通聊天] {{"ohter":"true"}}
-例如：
-input: 我想听音乐 output: [播放音乐] {{"singer":None,"music name":"随机"}}
-"""
+[普通聊天] {{"ohter":"true"}}"""
 
 
 
