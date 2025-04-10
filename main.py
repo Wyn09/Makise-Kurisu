@@ -8,7 +8,7 @@ import os
 import time
 from config import *
 from multi_function import *
-
+from anyio import create_task_group
 
 # chatModel = LocalChatModel(
 #     base_model=ChatModelConfig.base_model, 
@@ -67,10 +67,13 @@ async def read_user_inputs(
             for x in "😱🐾🐾🐾":
                 print(x, end=" ")
                 time.sleep(0.5)
-            # 当检测到退出命令时，结束进程
-            # print(ChatModelResponse.outputs["chat_history"])
+
             await chatModel.cleanup()
             os._exit(0)
+
+
+            break
+
         else:
             print(f"🤓 : {user_input}")
         
@@ -86,16 +89,23 @@ async def read_user_inputs(
 
 
 async def main():
-    
-    await chatModel.post_init()
-    print(f"\ninit time: {asyncio.get_running_loop().time()}")
-
-    await asyncio.gather(
-        #  recognize_screenshot(chatModel, img2textModel),
-         read_user_inputs(chatModel, img2textModel, intentModel)
-    )
+    try:
+        await chatModel.post_init()
+        print(f"\ninit time: {asyncio.get_running_loop().time()}")
+        
+        await asyncio.gather(
+            #  recognize_screenshot(chatModel, img2textModel),
+            read_user_inputs(chatModel, img2textModel, intentModel)
+        )
+    except asyncio.CancelledError as e:
+        print(e)
+    finally:
+        await chatModel.cleanup()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        print(f"Unhandled exception: {e}")
 
     pass

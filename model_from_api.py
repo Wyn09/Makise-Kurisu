@@ -8,6 +8,8 @@ from mcp.client.stdio import stdio_client
 import json
 from typing import Optional, Dict
 from contextlib import AsyncExitStack
+from datetime import datetime
+from utils import get_now_datetime
 
 
 load_dotenv(find_dotenv())
@@ -108,10 +110,12 @@ class APIChatModel:
         # return history, response
 
         try:
-            history.append({"role": "user", "content": query})
+            history.append({"role": "user", "content": "(" + str(await get_now_datetime())+") user:" + query})
             # print(messages)
             response = await self.chat_base(history.copy())
             result = response.choices[0].message.content.replace("\n\n","")
+
+            # history[-1]["content"] = "(" + str(await get_now_datetime())+") " + history[-1]["content"]
             history.append({"role": "assistant", "content": result})
 
         except Exception as e:
@@ -126,7 +130,7 @@ class APIChatModel:
     def set_model_language(self, language="中文"):
         self.language = language
         with open(self.sys_prompt_dic[self.role][language], "r", encoding="utf-8") as f:
-            self.system_prompt += "".join(f.readlines())
+            self.system_prompt = "".join(f.readlines()) + self.system_prompt
 
     async def chat_completion(self, messages):  # 异步方法
         res = await self.client.chat.completions.create(
@@ -239,6 +243,7 @@ class APIChatModel:
             messages=messages,
             tools=self.all_tools
         )
+
         if response.choices[0].finish_reason == "tool_calls":
             
             for _ in range(10): # 限制重试次数
@@ -332,9 +337,11 @@ class APIChatModel:
         return resp.content if len(resp.content) > 0 else "工具执行无输出"
 
     async def cleanup(self):
-        # 关闭所有资源
-        await self.exit_stack.aclose()
-
+        try:
+            # 确保 AsyncExitStack 被正确关闭
+            await self.exit_stack.aclose()
+        except Exception as e:
+            print(f"Cleanup error: {e}")
 
 
 
@@ -344,7 +351,7 @@ async def handle_inputs(model, query, history):
     
     
 async def main():
-    model = APIChatModel(role="2b")
+    model = APIChatModel(role="2b", system_prompt="")
     model.set_model_language("中文")
     await model.post_init()
 

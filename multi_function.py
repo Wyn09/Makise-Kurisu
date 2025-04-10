@@ -15,7 +15,7 @@ async def functionCall_or_not(
 ):
     asyncio.create_task(delay_screenshot_time_or_not(loop))
     
-    outputs = await intentModel.recognition(user_input[3:])  
+    outputs = await intentModel.recognition(user_input)  
     # print(outputs)
     
 
@@ -59,7 +59,6 @@ async def handle_user_inputs(
     user_input, 
     loop
 ):
-    user_input = "用户:" + user_input
     res = await functionCall_or_not(chatModel, img2textModel, intentModel, user_input, loop)
     if not res:
         await chatWithTTS(chatModel, user_input)
