@@ -69,7 +69,7 @@ class APIChatModelConfig:
     system_prompt = API_MODEL_SYSTEM_PROMPT
     temperature = 1.0
     top_p = 0.7
-    max_new_tokens = 160
+    max_new_tokens = 200
     repetition_penalty = 1.4
     role = "kurisu"
     mdoel = []
@@ -86,7 +86,7 @@ class ChatModelResponse:
         "chat_history": []
     }
     
-    chat_history_length = 10
+    chat_history_length = 20
 
 
 

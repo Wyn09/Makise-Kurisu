@@ -8,15 +8,13 @@ sys.path.append(current_dir)
 from baidu_translate import translate
 
 
-
-
 mcp = FastMCP("ClipboardServer")
 USER_AGENT = "ClipboardServer-app/1.0"
 
-@mcp.tool()
+
 async def read_clipboard():
     """
-    读取user剪贴板的内容,读取用户最后一次复制的内容  
+    读取user剪贴板最后一次复制的内容  
 
     :return: 用户剪贴板的内容
     """
@@ -26,7 +24,7 @@ async def read_clipboard():
 @mcp.tool()
 async def write_clipboard(content):
     """
-    将内容写入user的剪贴板  
+    将内容写入user的剪贴板,帮用户复制内容  
 
     :param str content: 写入user剪贴板的内容
     :return: 写入结果
@@ -40,10 +38,10 @@ async def write_clipboard(content):
 @mcp.tool()
 async def translate_clipboard_content(text="", lang="中文"):
     """
-    该函数可以直接读取剪贴板并翻译,无需执行read_clipboard()
+    翻译文本。该函数可以直接读取剪贴板并翻译
     
     :param str text: 可选参数,默认为空字符串,为空字符串则翻译最近一条剪切板内容。也可翻译传入的文本。
-    :param str lang: 翻译的语言: 中文 英文 日文
+    :param str lang: 可选参数,默认为中文。可选翻译的语言: 中文 英文 日文
     :return: 翻译后的文本
     """
     try:

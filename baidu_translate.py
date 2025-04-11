@@ -75,7 +75,8 @@ async def baidu_translate(text, appid, secret_key, tgt_language):
 
 async def translate(text, tgt_language="中文"):
     translated_text = await baidu_translate(text, APP_ID, SECRET_KEY, tgt_language)
-    return translated_text["trans_result"][0]["dst"]
+    result = "".join([item["dst"] for item in translated_text["trans_result"]])
+    return result
 
 
 

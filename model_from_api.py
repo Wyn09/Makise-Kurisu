@@ -83,7 +83,8 @@ class APIChatModel:
             "SearchServer": "./mcp-server/Search_server.py",
             "MusicServer": "./mcp-server/Music_server.py",
             "ClipboardServer": "./mcp-server/Clipboard_server.py",
-            # "ScreenshotServer": "./mcp-server/Screenshot_server.py"
+            # "ScreenshotServer": "./mcp-server/Screenshot_server.py",
+            "ScheduleServer": "./mcp-server/Schedule_server.py"
         }
     
         try:
@@ -96,7 +97,7 @@ class APIChatModel:
         try:
             history.append({"role": "user", "content": "(" + str(await get_now_datetime())+") user:" + query})
             # print(messages)
-            response = await self.chat_base(history.copy())
+            response = await self.chat_base(history)
             result = response.choices[0].message.content.replace("\n\n","")
 
             # history[-1]["content"] = "(" + str(await get_now_datetime())+") " + history[-1]["content"]

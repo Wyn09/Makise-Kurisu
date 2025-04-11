@@ -13,7 +13,7 @@ USER_AGENT = "SearchServer-app/1.0"
 @mcp.tool()
 async def google_search(query: str, num_results: int = 10, site_url: str = None) -> list:
     """
-    谷歌搜索
+    谷歌搜索,可以指定搜索网站
 
     :param query: 搜索内容
     :param num_results: 返回搜索结果数量（默认10）
