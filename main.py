@@ -100,19 +100,20 @@ async def main():
         print(f"\ninit time: {asyncio.get_running_loop().time()}")
         
         await asyncio.gather(
-             recognize_screenshot(chatModel, img2textModel),
+            #  recognize_screenshot(chatModel, img2textModel),
             read_user_inputs(chatModel, img2textModel, intentModel)
         )
     except asyncio.CancelledError as e:
-        print(e)
-    finally:
-        await chatModel.cleanup()
+        # print(e)
+        pass
+        
 
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
-        print(f"Unhandled exception: {e}")
+        # print(f"Unhandled exception: {e}")
+        pass
 
     pass
