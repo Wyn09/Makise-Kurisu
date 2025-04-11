@@ -3,7 +3,7 @@ from config import *
 import numpy as np
 from baidu_translate import translate
 from text2audio import synthesize_and_play
-from screen_grap import screenshot
+from screen_grap import screenshot_buffer
 import os
 from datetime import datetime
 
@@ -65,16 +65,18 @@ async def chatWithImg(
     
 ):
     print("*" * 80)
-    img_file_path = screenshot(screenshot_folder_path)
+
+    # 这里换成了直接用内存传输数据，避免了io
+    img_buffer = await screenshot_buffer()
     # print("截图已保存在: ", img_file_path)
-    text_of_img = await img2textModel.img2text(img_file_path, user_input=user_input, max_new_tokens=max_new_tokens)
+    text_of_img = await img2textModel.img2text(img_buffer, user_input=user_input, max_new_tokens=max_new_tokens)
     # print(f"\nText Of Img:\n\t{text_of_img}")
     await chatWithTTS(chatModel, text_of_img + user_input)
 
     # print(f"Length of chat_history:\t{len(ChatModelResponse.outputs["chat_history"])}\n")
 
     # 删除抓取的图片
-    os.remove(img_file_path)
+    # os.remove(img_file_path)
 
 
 

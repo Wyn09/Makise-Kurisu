@@ -124,7 +124,7 @@ async def chatWithImg_sleep_correction(
                 chatModel,
                 img2textModel,
                 loop,
-                user_input="",
+                user_input=user_input,
                 state=Img2TextModelConfig.state
             )
         
