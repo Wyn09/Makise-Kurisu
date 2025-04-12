@@ -8,7 +8,7 @@ sys.path.append(current_dir)
 from utils import delay_screenshot_time_or_not, chatWithImg
 from screen_grap import screenshot
 import config
-from bridge_flow import SHARE_STATE
+from var_bridge_flow import SHARE_STATE
 
 
 mcp = FastMCP("ScreenshotServer")

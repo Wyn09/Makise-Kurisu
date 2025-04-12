@@ -6,13 +6,16 @@ from aioconsole import ainput
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import json
+import numpy as np
 from typing import Optional, Dict
 from contextlib import AsyncExitStack
 from datetime import datetime
 from utils import get_now_datetime
+from multi_function import write_current_time, get_user_uninput_timePeriod
+from baidu_asr import record_and_recognize
 from qwen_vl_3B_Instruct import Img2TextModel
 import config
-from bridge_flow import SHARE_STATE
+from var_bridge_flow import SHARE_STATE
 
 
 load_dotenv(find_dotenv())
@@ -24,8 +27,8 @@ class APIChatModel:
             api_key=os.getenv("DEEPSEEK_API_KEY"),
             base_url=os.getenv("DEEPSEEK_API_KEY_URL"),
             system_prompt="",
-            temperature=1.0,
-            top_p=0.8,
+            temperature=1.8,
+            top_p=1.0,
             max_new_tokens=128,
             repetition_penalty=1.2,
             role="kurisu"
@@ -76,15 +79,16 @@ class APIChatModel:
     async def post_init(self):
         # 服务器脚本
         servers = {
-            "WeatherServer": "./mcp-server/Weather_server.py",
-            # "SQLServer": "./mcp-server/SQL_server.py",
-            "PythonServer": "./mcp-server/Python_server.py",
+            # "WeatherServer": "./mcp-server/Weather_server.py",
+            # "PythonServer": "./mcp-server/Python_server.py",
             "EmailServer": "./mcp-server/Email_server.py",
-            "SearchServer": "./mcp-server/Search_server.py",
-            "MusicServer": "./mcp-server/Music_server.py",
-            "ClipboardServer": "./mcp-server/Clipboard_server.py",
+            # "SearchServer": "./mcp-server/Search_server.py",
+            # "MusicServer": "./mcp-server/Music_server.py",
+            # "ClipboardServer": "./mcp-server/Clipboard_server.py",
+            # "ScheduleServer": "./mcp-server/Schedule_server.py",
+
             # "ScreenshotServer": "./mcp-server/Screenshot_server.py",
-            "ScheduleServer": "./mcp-server/Schedule_server.py"
+            # "SQLServer": "./mcp-server/SQL_server.py",
         }
     
         try:
@@ -95,7 +99,11 @@ class APIChatModel:
 
     async def chat_with_history(self, query, history=[]):
         try:
-            history.append({"role": "user", "content": "(" + str(await get_now_datetime())+") user:" + query})
+            # 如果传入的是{"role":"...","content":"..."}
+            if isinstance(query, dict): 
+                history.append(query)
+            else:
+                history.append({"role": "user", "content": "(" + str(await get_now_datetime())+") user:" + query})
             # print(messages)
             response = await self.chat_base(history)
             result = response.choices[0].message.content.replace("\n\n","")
@@ -223,25 +231,32 @@ class APIChatModel:
 
     async def chat_base(self, messages: list) -> list:
         # messages = [{"role": "user", "content": query}]
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            tools=self.all_tools
-        )
+        if self.all_tools:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                tools=self.all_tools
+            )
 
-        if response.choices[0].finish_reason == "tool_calls":
-            
-            for _ in range(10): # 限制重试次数
-                messages = await self.create_function_response_messages(
-                    messages, response
-                )
-                response = await self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    tools=self.all_tools
-                )
-                if response.choices[0].finish_reason != "tool_calls":
-                    break
+            if response.choices[0].finish_reason == "tool_calls":
+                
+                for _ in range(10): # 限制重试次数
+                    messages = await self.create_function_response_messages(
+                        messages, response
+                    )
+                    response = await self.client.chat.completions.create(
+                        model=self.model,
+                        messages=messages,
+                        tools=self.all_tools
+                    )
+                    if response.choices[0].finish_reason != "tool_calls":
+                        break
+                    
+        else:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+            )
 
         # return response.choices[0].message.content
         return response
@@ -330,36 +345,128 @@ class APIChatModel:
 
 
 
-async def handle_inputs(model, query, history):
+async def handle_inputs(model: APIChatModel, query, history):
     history, response = await model.chat_with_history(query, history)
     print(response)
     
     
+
+
+async def monitor_user_input_time(chatModel, history, time_size=20, time_step=10):
+
+    while True:
+        await asyncio.sleep(0.5)
+        # 如果还没记录用户输入时间
+        if SHARE_STATE.user_last_input_time == 0.0:
+            continue
+        time_period, time_diff = await get_user_uninput_timePeriod()
+        time_window = np.random.randint(time_size, time_size + time_step)
+        # 设定time_window秒未输入则判定True
+        if time_diff != 0 and time_diff % time_window == 0:
+            input_text = {"role": "assistant", "content": f"({str(await get_now_datetime())}) 已经{time_period}user没有理你!主动询问user在干嘛!一直未回复则可以向user发邮件进行询问"}
+            
+            await handle_inputs(chatModel, input_text, history)
+
+
+# async def main():
+#     model = APIChatModel(role="2b", system_prompt="")
+#     model.set_model_language("中文")
+#     await model.post_init()
+#     # 这里要在config里注册一下 
+#     config.APIChatModelConfig.mdoel.append(model)
+
+#     # 这里历史记录改成了提前传入系统提示词
+#     history = [{"role": "system", "content": model.system_prompt}]
+
+#     # # 如果执行屏幕识别也要加载vl model 
+#     # img2textModel = Img2TextModel(config.Img2TextModelConfig.quantization)
+#     # # 这里要在config里注册一下 
+#     # config.Img2TextModelConfig.model.append(img2textModel)
+
+#     asyncio.create_task(monitor_user_input_time(model, history))
+
+#     while True:
+        
+#         query = await ainput(">> ")  # 异步输入
+#         query = await record_and_recognize("ctrl+t")
+#         query = query.strip()
+        
+
+#         # 这里也要传入
+#         SHARE_STATE.user_input = query
+#         # 写入用户输入时间
+#         await write_current_time()
+
+#         if query.lower() == "exit":
+#             # 这里要执行清理
+#             await model.cleanup()
+#             break
+#         asyncio.create_task(handle_inputs(model, query, history))
+        
+#     print(history)   
+
+
+
+async def text_input():
+    while True:
+        query = await ainput(">> ")  # 异步输入
+        if query.strip():
+            return query.strip()
+
+async def voice_input():
+    while True:
+        query = await record_and_recognize(key="ctrl+t")
+        if query.strip():
+            return query.strip()
+
 async def main():
     model = APIChatModel(role="2b", system_prompt="")
     model.set_model_language("中文")
     await model.post_init()
     # 这里要在config里注册一下 
-    config.APIChatModelConfig.mdoel.append(model)
+    # config.APIChatModelConfig.mdoel.append(model)
 
     # 这里历史记录改成了提前传入系统提示词
     history = [{"role": "system", "content": model.system_prompt}]
 
-    # # 如果执行屏幕识别也要加载vl model 
-    # img2textModel = Img2TextModel(config.Img2TextModelConfig.quantization)
-    # # 这里要在config里注册一下 
-    # config.Img2TextModelConfig.model.append(img2textModel)
+    asyncio.create_task(monitor_user_input_time(model, history))
 
     while True:
-        query = await ainput(">> ")  # 异步输入
-        # 这里也要传入
-        SHARE_STATE.user_input[0] = query
+        # 同时监听文本输入和语音输入
+        text_task = asyncio.create_task(text_input())
+        voice_task = asyncio.create_task(voice_input())
+        
+        # 使用 asyncio.gather 等待任意一个任务完成
+        # done: 这是一个集合，包含已经完成的任务。
+        # pending: 这是一个集合，包含尚未完成的任务。
+        done, pending = await asyncio.wait(
+            [text_task, voice_task],    # 传递一个任务列表，这里包含两个任务：text_task 和 voice_task。 
+            return_when=asyncio.FIRST_COMPLETED # 这个参数指定 asyncio.wait 在第一个任务完成时立即返回，而不是等待所有任务完成
+        )
+        
+        # 取消未完成的任务
+        for task in pending:
+            task.cancel()
+        
+        # 获取完成任务的结果
+        for task in done:
+            query = task.result()
+            break
+        
+        # 写入用户输入时间
+        await write_current_time()
+
         if query.lower() == "exit":
             # 这里要执行清理
             await model.cleanup()
-            break
+            return
+        print(f"\nuser: {query}")
         asyncio.create_task(handle_inputs(model, query, history))
+        
     print(history)   
+
+
+
 
 if __name__ == "__main__":
     asyncio.run(main())  # 运行异步主函数

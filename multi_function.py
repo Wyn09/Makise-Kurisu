@@ -1,9 +1,11 @@
 import asyncio
 import numpy as np
-from config import *
+# from config import *
+from aioconsole import ainput
 from function_tools import init_params, FUNCTION_CALL_MAPPING
-from utils import delay_screenshot_time_or_not, chatWithTTS, chatWithImg, get_random_sleep_time
-
+from utils import *
+from var_bridge_flow import SHARE_STATE
+from baidu_asr import record_and_recognize
 
 async def functionCall_or_not(
     chatModel, 
@@ -128,3 +130,48 @@ async def chatWithImg_sleep_correction(
                 state=Img2TextModelConfig.state
             )
         
+
+async def write_current_time():
+    time = datetime.now()
+    SHARE_STATE.user_last_input_time = time
+
+async def get_user_uninput_timePeriod():
+
+    user_last_input_time = SHARE_STATE.user_last_input_time
+    time_diff = (datetime.now() - user_last_input_time).total_seconds()
+    hours = int(time_diff / 3600)
+    minutes = int((time_diff / 60) - hours * 60)
+    seconds = int(time_diff - hours * 3600 - minutes * 60)
+    timePeriod = f"{hours}时{minutes}分{seconds}秒"
+    return timePeriod, int(time_diff)
+
+
+async def monitor_user_input_time(chatModel, time_size=20, time_step=10):
+
+    while True:
+        await asyncio.sleep(0.5)
+        # 如果还没记录用户输入时间
+        if SHARE_STATE.user_last_input_time == 0.0:
+            continue
+        time_period, time_diff = await get_user_uninput_timePeriod()
+        time_window = np.random.randint(time_size, time_size + time_step)
+        # 设定time_window秒未输入则判定True
+        if time_diff != 0 and time_diff % time_window == 0:
+            input_text = {"role": "assistant", "content": f"({str(await get_now_datetime())}) 已经{time_period}用户未响应啦!主动询问用户在干嘛!可以向用户发邮件进行询问"}
+            
+            await chatWithTTS(chatModel, input_text)
+
+
+async def text_input():
+    while True:
+        query = await ainput(">> ")  # 异步输入
+        if query.strip():
+            return query.strip()
+
+async def voice_input():
+    while True:
+        query = await record_and_recognize(key="ctrl+t")
+        if query.strip():
+            return query.strip()
+
+

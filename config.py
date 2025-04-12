@@ -27,6 +27,7 @@ class FunctionThread(threading.Thread):
         self.join()  # 确保线程执行完毕
         return self.result
     
+    
 class ScreenshotState:
     def __init__(self):
         # 记录任务的下次计划执行时间
@@ -91,11 +92,11 @@ class ChatModelResponse:
 
 
 
-MUSIC_FILE_FOLDER = r"./music/*"
-FILE_PATHS = glob.glob(MUSIC_FILE_FOLDER)
-# 提取纯文件名（不带后缀）
-filenames = [
-    os.path.splitext(os.path.basename(path))[0]  # 分割路径并去除扩展名
-    for path in FILE_PATHS
-]
-MUSIC_REPOSITORY = {i: n for i, n in enumerate(filenames)}
+# MUSIC_FILE_FOLDER = r"./music/*"
+# FILE_PATHS = glob.glob(MUSIC_FILE_FOLDER)
+# # 提取纯文件名（不带后缀）
+# filenames = [
+#     os.path.splitext(os.path.basename(path))[0]  # 分割路径并去除扩展名
+#     for path in FILE_PATHS
+# ]
+# MUSIC_REPOSITORY = {i: n for i, n in enumerate(filenames)}

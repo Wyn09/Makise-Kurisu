@@ -1,11 +1,12 @@
 import asyncio
-from config import *
+from config import ChatModelResponse, Img2TextModelConfig, TTSModelConfig
 import numpy as np
 from baidu_translate import translate
 from text2audio import synthesize_and_play
 from screen_grap import screenshot_buffer
 import os
 from datetime import datetime
+
 
 async def get_random_sleep_time(response, alpha=5):
     min_sleep_time = len(response) / alpha
@@ -97,3 +98,7 @@ async def delay_screenshot_time_or_not(loop, state=Img2TextModelConfig.state, fr
         
 async def get_now_datetime():
     return datetime.now().strftime("%Y年%m月%d日 %H点%M分%S秒")
+
+
+
+

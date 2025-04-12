@@ -6,7 +6,7 @@ from model_from_api import APIChatModel
 from model_intent import IntentModel
 import os
 import time
-from config import *
+from config import APIChatModelConfig, Img2TextModelConfig, TTSModelConfig
 from multi_function import *
 
 # chatModel = LocalChatModel(
@@ -64,9 +64,31 @@ async def read_user_inputs(
 ):
     try:
         loop = asyncio.get_running_loop()
+
+        asyncio.create_task(monitor_user_input_time(chatModel, time_size=60, time_step=30))
+
         while True:
-            user_input = await ainput("🤗 >> ")
+            text_task = asyncio.create_task(text_input())
+            voice_task = asyncio.create_task(voice_input())
+            # 使用 asyncio.gather 等待任意一个任务完成
+            # done: 这是一个集合，包含已经完成的任务。
+            # pending: 这是一个集合，包含尚未完成的任务。
+            done, pending = await asyncio.wait(
+                [text_task, voice_task],    # 传递一个任务列表，这里包含两个任务：text_task 和 voice_task。 
+                return_when=asyncio.FIRST_COMPLETED # 这个参数指定 asyncio.wait 在第一个任务完成时立即返回，而不是等待所有任务完成
+            )
+             # 取消未完成的任务
+            for task in pending:
+                task.cancel()
+            
+            # 获取完成任务的结果
+            for task in done:
+                user_input = task.result()
+                break
+
             user_input = user_input.strip()
+            await write_current_time()
+
             if user_input.lower() in ["quit", "exit"]:
                 print("\nExiting... ", end="")
                 for x in "😱🐾🐾🐾":
@@ -77,7 +99,7 @@ async def read_user_inputs(
                 os._exit(0)
 
             else:
-                print(f"🤓 : {user_input}")
+                print(f"🤗 : {user_input}")
 
                 asyncio.create_task(
                     handle_user_inputs(
@@ -101,7 +123,8 @@ async def main():
         
         await asyncio.gather(
             #  recognize_screenshot(chatModel, img2textModel),
-            read_user_inputs(chatModel, img2textModel, intentModel)
+            read_user_inputs(chatModel, img2textModel, intentModel),
+
         )
     except asyncio.CancelledError as e:
         # print(e)
