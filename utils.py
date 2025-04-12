@@ -6,7 +6,8 @@ from text2audio import synthesize_and_play
 from screen_grap import screenshot_buffer
 import os
 from datetime import datetime
-
+import string
+import re
 
 async def get_random_sleep_time(response, alpha=5):
     min_sleep_time = len(response) / alpha
@@ -34,8 +35,10 @@ async def chatWithTTS(
 
     ChatModelResponse.outputs["chat_history"], ChatModelResponse.outputs["response"] = \
     await chatModel.chat_with_history(text, ChatModelResponse.outputs["chat_history"])
+
+    tts_input_text = await filter_punctuation(ChatModelResponse.outputs["response"])
     await synthesize_and_play(
-        ChatModelResponse.outputs["response"],     
+        tts_input_text,     
         text_language=text_language,
         cut_punc=cut_punc,
         top_k=top_k,
@@ -102,3 +105,16 @@ async def get_now_datetime():
 
 
 
+async def filter_punctuation(text):
+    fullwidth_punctuation = ''.join(chr(i) for i in range(0xFF01, 0xFF0F + 1)) + \
+                            ''.join(chr(i) for i in range(0xFF1A, 0xFF20 + 1)) + \
+                            ''.join(chr(i) for i in range(0xFF3B, 0xFF40 + 1)) + \
+                            ''.join(chr(i) for i in range(0xFF5B, 0xFF60 + 1)) + \
+                            ''.join(chr(i) for i in range(0xFF62, 0xFF65 + 1))
+
+    punc = string.punctuation + fullwidth_punctuation
+    # 创建一个正则表达式模式，匹配所有的标点符号
+    pattern = re.compile(f"[{re.escape(punc)}]")
+    # 使用 re.sub 替换所有匹配的标点符号为空字符串
+    result = pattern.sub("", text)
+    return result

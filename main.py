@@ -65,7 +65,7 @@ async def read_user_inputs(
     try:
         loop = asyncio.get_running_loop()
 
-        asyncio.create_task(monitor_user_input_time(chatModel, time_size=60, time_step=30))
+        asyncio.create_task(monitor_user_input_time(chatModel, time_size=120, time_step=120))
 
         while True:
             text_task = asyncio.create_task(text_input())

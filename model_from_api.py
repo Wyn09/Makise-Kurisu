@@ -79,13 +79,13 @@ class APIChatModel:
     async def post_init(self):
         # 服务器脚本
         servers = {
-            # "WeatherServer": "./mcp-server/Weather_server.py",
-            # "PythonServer": "./mcp-server/Python_server.py",
+            "WeatherServer": "./mcp-server/Weather_server.py",
+            "PythonServer": "./mcp-server/Python_server.py",
             "EmailServer": "./mcp-server/Email_server.py",
-            # "SearchServer": "./mcp-server/Search_server.py",
-            # "MusicServer": "./mcp-server/Music_server.py",
-            # "ClipboardServer": "./mcp-server/Clipboard_server.py",
-            # "ScheduleServer": "./mcp-server/Schedule_server.py",
+            "SearchServer": "./mcp-server/Search_server.py",
+            "MusicServer": "./mcp-server/Music_server.py",
+            "ClipboardServer": "./mcp-server/Clipboard_server.py",
+            "ScheduleServer": "./mcp-server/Schedule_server.py",
 
             # "ScreenshotServer": "./mcp-server/Screenshot_server.py",
             # "SQLServer": "./mcp-server/SQL_server.py",

@@ -18,7 +18,7 @@ async def functionCall_or_not(
     asyncio.create_task(delay_screenshot_time_or_not(loop))
     
     outputs = await intentModel.recognition(user_input)  
-    print(f"\nintent: {outputs}\n")
+    # print(f"\nintent: {outputs}\n")
     
 
     try:

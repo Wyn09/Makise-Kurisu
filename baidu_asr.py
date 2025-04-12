@@ -68,12 +68,12 @@ class AsyncVoiceRecorder:
                 if keyboard.is_pressed(key) and not key_pressed:
                     key_pressed = True
                     self.is_recording = True
-                    print("#Hold-on")
+                    print("\n#Hold-on")
                 
                 elif not keyboard.is_pressed(key) and key_pressed:
                     key_pressed = False
                     self.is_recording = False
-                    print("#Hold-off")
+                    print("\n#Hold-off")
                     break
                 
                 # 如果正在录音，读取音频块
@@ -130,11 +130,11 @@ class AsyncVoiceRecorder:
                     
                     if toggle_state:  # 开始录音
                         self.is_recording = True
-                        print("#Toggle-on")
+                        print("\n#Toggle-on")
                     else:  # 停止录音
                         if self.is_recording:
                             self.is_recording = False
-                            print("#Toggle-off")
+                            print("\n#Toggle-off")
                             break
                 
                 # 如果正在录音，读取音频块
