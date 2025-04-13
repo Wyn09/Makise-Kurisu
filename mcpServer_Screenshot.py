@@ -1,10 +1,6 @@
 import json
 import asyncio
 from mcp.server.fastmcp import FastMCP
-import sys
-import os
-current_dir = os.getcwd()
-sys.path.append(current_dir) 
 from utils import delay_screenshot_time_or_not, chatWithImg
 from screen_grap import screenshot
 import config
@@ -38,4 +34,5 @@ async def execute_screenshot():
 
 
 if __name__ == "__main__":
+   
     mcp.run("stdio")

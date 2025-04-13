@@ -65,16 +65,20 @@ async def read_user_inputs(
     try:
         loop = asyncio.get_running_loop()
 
-        asyncio.create_task(monitor_user_input_time(chatModel, time_size=120, time_step=120))
+        asyncio.create_task(monitor_user_input_time(chatModel, time_size=30, time_step=120))
 
         while True:
+            await asyncio.sleep(0.2)
             text_task = asyncio.create_task(text_input())
             voice_task = asyncio.create_task(voice_input())
             # 使用 asyncio.gather 等待任意一个任务完成
             # done: 这是一个集合，包含已经完成的任务。
             # pending: 这是一个集合，包含尚未完成的任务。
             done, pending = await asyncio.wait(
-                [text_task, voice_task],    # 传递一个任务列表，这里包含两个任务：text_task 和 voice_task。 
+                [
+                    text_task, 
+                    voice_task
+                 ],    # 传递一个任务列表，这里包含两个任务：text_task 和 voice_task。 
                 return_when=asyncio.FIRST_COMPLETED # 这个参数指定 asyncio.wait 在第一个任务完成时立即返回，而不是等待所有任务完成
             )
              # 取消未完成的任务

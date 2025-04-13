@@ -5,7 +5,7 @@ from baidu_translate import translate
 from text2audio import synthesize_and_play
 from screen_grap import screenshot_buffer
 import os
-from datetime import datetime
+import datetime
 import string
 import re
 
@@ -79,6 +79,7 @@ async def chatWithImg(
 
     # print(f"Length of chat_history:\t{len(ChatModelResponse.outputs["chat_history"])}\n")
 
+
     # 删除抓取的图片
     # os.remove(img_file_path)
 
@@ -100,7 +101,7 @@ async def delay_screenshot_time_or_not(loop, state=Img2TextModelConfig.state, fr
              pass
         
 async def get_now_datetime():
-    return datetime.now().strftime("%Y年%m月%d日 %H点%M分%S秒")
+    return datetime.datetime.now().strftime("%Y年%m月%d日 %H点%M分%S秒")
 
 
 

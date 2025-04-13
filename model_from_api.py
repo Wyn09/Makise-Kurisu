@@ -9,13 +9,13 @@ import json
 import numpy as np
 from typing import Optional, Dict
 from contextlib import AsyncExitStack
-from datetime import datetime
+import datetime
 from utils import get_now_datetime
-from multi_function import write_current_time, get_user_uninput_timePeriod
+from multi_function import write_current_time, get_user_uninput_timePeriod, agenda_to_datetime
 from baidu_asr import record_and_recognize
 from qwen_vl_3B_Instruct import Img2TextModel
-import config
 from var_bridge_flow import SHARE_STATE
+
 
 
 load_dotenv(find_dotenv())
@@ -79,16 +79,16 @@ class APIChatModel:
     async def post_init(self):
         # 服务器脚本
         servers = {
-            "WeatherServer": "./mcp-server/Weather_server.py",
-            "PythonServer": "./mcp-server/Python_server.py",
-            "EmailServer": "./mcp-server/Email_server.py",
-            "SearchServer": "./mcp-server/Search_server.py",
-            "MusicServer": "./mcp-server/Music_server.py",
-            "ClipboardServer": "./mcp-server/Clipboard_server.py",
-            "ScheduleServer": "./mcp-server/Schedule_server.py",
+            "WeatherServer": "./mcpServer_Weather.py",
+            "PythonServer": "./mcpServer_Python.py",
+            "EmailServer": "./mcpServer_Email.py",
+            "SearchServer": "./mcpServer_Search.py",
+            "MusicServer": "./mcpServer_Music.py",
+            "ClipboardServer": "./mcpServer_Clipboard.py",
+            "ScheduleServer": "./mcpServer_Schedule.py",
 
-            # "ScreenshotServer": "./mcp-server/Screenshot_server.py",
-            # "SQLServer": "./mcp-server/SQL_server.py",
+            # "ScreenshotServer": "mcpServer_Screenshot.py",
+            # "SQLServer": "mcpServer_SQL.py",
         }
     
         try:
@@ -141,7 +141,7 @@ class APIChatModel:
     async def connect_to_servers(self, servers: dict):
         """
         同时启动多个服务器并获取工具
-        servers: 形如 {"weather": "weather_server.py", "rag": "rag_server.py"}
+        servers: 形如 {"weather": "mcpServer_Weather.py", "rag": "mcpServer_Rag.py"}
         """
         for server_name, script_path in servers.items():
             session = await self._start_one_server(script_path)
@@ -320,6 +320,21 @@ class APIChatModel:
         # 如果模型没调用工具，直接返回回答
         return content.message.content
 
+
+    async def _execute_tool(self, server_name, tool_name, tool_args):
+        session = self.sessions.get(server_name)
+        if not session:
+            return f"找不到服务器: {server_name}"
+        # 执行 MCP 工具
+        resp = await session.call_tool(tool_name, tool_args)
+        return resp
+
+
+    async def synchronized_agenda(self):
+        agd_ = await self._execute_tool("ScheduleServer", "list_agenda", {})
+        agd = eval(agd_.content[0].text)["result"]
+        SHARE_STATE.agenda = agd
+
     async def _call_mcp_tool(self, tool_full_name: str, tool_args: dict) -> str:
         """
         根据 "serverName_toolName" 调用相应的服务器工具
@@ -328,12 +343,14 @@ class APIChatModel:
         if len(parts) != 2:
             return f"无效的工具名称: {tool_full_name}"
         server_name, tool_name = parts
-        session = self.sessions.get(server_name)
-        if not session:
-            return f"找不到服务器: {server_name}"
-        # 执行 MCP 工具
-        resp = await session.call_tool(tool_name, tool_args)
-        print(f"{resp}\n")
+
+        resp = await self._execute_tool(server_name, tool_name, tool_args)
+
+        # 同步agenda
+        if "agenda" in tool_name:
+            await self.synchronized_agenda()
+
+        print(f"\n{tool_name}: {resp}\n")
         return resp.content if len(resp.content) > 0 else "工具执行无输出"
 
     async def cleanup(self):
@@ -351,8 +368,7 @@ async def handle_inputs(model: APIChatModel, query, history):
     
     
 
-
-async def monitor_user_input_time(chatModel, history, time_size=20, time_step=10):
+async def monitor_user_input_time(chatModel: APIChatModel, history, time_size=40, time_step=40):
 
     while True:
         await asyncio.sleep(0.5)
@@ -360,52 +376,30 @@ async def monitor_user_input_time(chatModel, history, time_size=20, time_step=10
         if SHARE_STATE.user_last_input_time == 0.0:
             continue
         time_period, time_diff = await get_user_uninput_timePeriod()
-        time_window = np.random.randint(time_size, time_size + time_step)
-        # 设定time_window秒未输入则判定True
-        if time_diff != 0 and time_diff % time_window == 0:
-            input_text = {"role": "assistant", "content": f"({str(await get_now_datetime())}) 已经{time_period}user没有理你!主动询问user在干嘛!一直未回复则可以向user发邮件进行询问"}
-            
-            await handle_inputs(chatModel, input_text, history)
+        if time_diff != 0:
+            if len(SHARE_STATE.agenda) == 0:
+                time_window = np.random.randint(time_size, time_size + time_step)
+                # 设定time_window秒未输入则判定True
+                if time_diff % time_window == 0:
+                    input_text = {"role": "assistant", "content": f"({str(await get_now_datetime())}) 已经{time_period}用户没理你啦!主动询问用户在干嘛!可以向用户发邮件进行询问"}
 
-
-# async def main():
-#     model = APIChatModel(role="2b", system_prompt="")
-#     model.set_model_language("中文")
-#     await model.post_init()
-#     # 这里要在config里注册一下 
-#     config.APIChatModelConfig.mdoel.append(model)
-
-#     # 这里历史记录改成了提前传入系统提示词
-#     history = [{"role": "system", "content": model.system_prompt}]
-
-#     # # 如果执行屏幕识别也要加载vl model 
-#     # img2textModel = Img2TextModel(config.Img2TextModelConfig.quantization)
-#     # # 这里要在config里注册一下 
-#     # config.Img2TextModelConfig.model.append(img2textModel)
-
-#     asyncio.create_task(monitor_user_input_time(model, history))
-
-#     while True:
-        
-#         query = await ainput(">> ")  # 异步输入
-#         query = await record_and_recognize("ctrl+t")
-#         query = query.strip()
-        
-
-#         # 这里也要传入
-#         SHARE_STATE.user_input = query
-#         # 写入用户输入时间
-#         await write_current_time()
-
-#         if query.lower() == "exit":
-#             # 这里要执行清理
-#             await model.cleanup()
-#             break
-#         asyncio.create_task(handle_inputs(model, query, history))
-        
-#     print(history)   
-
-
+                    await handle_inputs(chatModel, input_text, history)
+            else:
+                # agenda: {datetime.datetime: [content]}
+                agenda = await agenda_to_datetime()
+                agenda_arr = np.asarray(list(agenda.items()))
+                # 超过日程时间了的日程
+                agenda_todo_arr = agenda_arr[agenda_arr[:,0] <= datetime.datetime.now()]
+                if len(agenda_todo_arr) != 0:
+                    agenda_todo_time_content = {k.isoformat(): v for k,v in agenda.items() if k in agenda_todo_arr[:,0]}
+                    input_text = {"role": "assistant", "content": f"({str(await get_now_datetime())}) 现在是日程任务的时间,完成日程任务:{agenda_todo_time_content},并且快到时间的日程任务也要提前提醒!"}
+                    
+                    # 更新主进程的agenda
+                    SHARE_STATE.agenda = {k.isoformat(): v for k,v in agenda.items() if k not in agenda_todo_arr[:,0]}
+                    delete_todo_time =np.vectorize(datetime.datetime.isoformat)(agenda_todo_arr[:,0]).tolist()
+                    # 更新服务端的agenda
+                    await chatModel._execute_tool("ScheduleServer", "delete_agenda", {"time": delete_todo_time})
+                    await handle_inputs(chatModel, input_text, history)
 
 async def text_input():
     while True:
@@ -432,6 +426,7 @@ async def main():
     asyncio.create_task(monitor_user_input_time(model, history))
 
     while True:
+        await asyncio.sleep(0.5)
         # 同时监听文本输入和语音输入
         text_task = asyncio.create_task(text_input())
         voice_task = asyncio.create_task(voice_input())
@@ -440,7 +435,10 @@ async def main():
         # done: 这是一个集合，包含已经完成的任务。
         # pending: 这是一个集合，包含尚未完成的任务。
         done, pending = await asyncio.wait(
-            [text_task, voice_task],    # 传递一个任务列表，这里包含两个任务：text_task 和 voice_task。 
+            [
+                text_task, 
+                voice_task
+             ],    # 传递一个任务列表，这里包含两个任务：text_task 和 voice_task。 
             return_when=asyncio.FIRST_COMPLETED # 这个参数指定 asyncio.wait 在第一个任务完成时立即返回，而不是等待所有任务完成
         )
         
@@ -460,6 +458,9 @@ async def main():
             # 这里要执行清理
             await model.cleanup()
             return
+        
+        SHARE_STATE.user_input = query
+
         print(f"\nuser: {query}")
         asyncio.create_task(handle_inputs(model, query, history))
         
@@ -469,4 +470,5 @@ async def main():
 
 
 if __name__ == "__main__":
+   
     asyncio.run(main())  # 运行异步主函数

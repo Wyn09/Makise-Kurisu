@@ -143,7 +143,7 @@ class AsyncVoiceRecorder:
                     self.frames.append(chunk)
                 
                 # 短暂等待，避免CPU占用过高
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(0.1)
         
         finally:
             # 关闭音频流

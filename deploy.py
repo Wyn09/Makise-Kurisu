@@ -7,8 +7,8 @@ from config import ChatModelResponse
 from pydantic import BaseModel
 from typing import Optional
 app = fastapi.FastAPI()
-# 加载tts模型
-# start_kurisu()
+# tts model api
+start_kurisu()
 
 class RequestInput(BaseModel):
     user_input: str

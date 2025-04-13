@@ -1,17 +1,23 @@
 from mcp.server.fastmcp import FastMCP
 import json
-
+import datetime
 
 
 mcp = FastMCP("ScheduleServer")
 USER_AGENT = "ScheduleServer-app/1.0"
 
+
 AGENDA = {}
 
+async def gen_agenda(time: str, content):
 
-
-async def gen_agenda(time, content):
+    time = time.split(" ")
+    Y_m_d, H_M_S = time[0], time[1]
+    year, month, day = Y_m_d.replace("%", "").split("-")
+    hour, minute, second = H_M_S.replace("%", "").split(":")
+    time = datetime.datetime(int(year), int(month), int(day), int(hour), int(minute), int(second)).isoformat()
     return {time: [content]}
+
 
 
 @mcp.tool()
@@ -96,6 +102,24 @@ async def list_agenda():
     """
     return json.dumps({"result": AGENDA}, ensure_ascii=False)
     pass
+
+# @mcp.tool()
+# async def set_remind_fixed_time(year: int, month: int, day: int, hour: int, minute: int, second: int) -> datetime.datetime:
+#     """
+#     设置日程提醒的时间,返回指定时间的 datetime.datetime 对象
+
+#     :param int year: 年份
+#     :param int month: 月份
+#     :param int day: 日期
+#     :param int hour: 小时
+#     :param int minute: 分钟
+#     :param int second: 秒
+#     :return: 指定时间的 datetime.datetime 对象
+#     """
+#     fixed_time = datetime.datetime(year, month, day, hour, minute, second)
+#     AGENDA.append(fixed_time)
+#     return 
+
 
 if __name__ == "__main__":
     mcp.run("stdio")

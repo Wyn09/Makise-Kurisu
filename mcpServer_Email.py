@@ -13,15 +13,16 @@ mcp = FastMCP("EmailServer")
 USER_AGENT = "EmailServer-app/1.0"
 
 @mcp.tool()
-async def send_QQmail(subject, message_text, to="eyfen.wyn@qq.com", file_paths=None, attachment_folder=None):
+async def send_QQmail(subject, message_text, to="eyfen.wyn@qq.com", file_paths=None, attachment_folder=None, nickname="Makise Kurisu"):
     """
     发送QQ邮件, 支持多个附件及附件文件夹
 
     :param str subject: 邮件主题
-    :param str message_text: 邮件正文,内容丰富一些,可以加入emoji表情
+    :param str message_text: 邮件正文,内容要丰富一些,可以加入emoji表情
     :param str to: 收件人邮箱地址,默认参数是user的邮箱地址
     :param str, list file_paths: 可选参数, 字符串或列表, 附件的路径
     :param str attachment_folder: 可选参数, 附件文件夹路径, 该文件夹下所有文件将作为附件
+    :param str nickname: 自己的昵称,默认是"Makise Kurisu",可以随心情更改
     :return: 执行结果
     """
     sender = 'm.akise-kurisu@qq.com'
@@ -29,7 +30,7 @@ async def send_QQmail(subject, message_text, to="eyfen.wyn@qq.com", file_paths=N
 
     try:
         msg = MIMEMultipart()
-        msg['From'] = formataddr(["🐱", sender])
+        msg['From'] = formataddr([nickname, sender])
         msg['To'] = formataddr(["acc", to])
         msg['Subject'] = subject
 

@@ -52,7 +52,7 @@ async def play_music(index: int):
             index = np.random.randint(0, len(FILE_PATHS))
 
         # 读取文件到内存
-        with open(FILE_PATHS[index], "rb") as f:
+        with open(FILE_PATHS[index - 1], "rb") as f:
             audio_data = f.read()
         # 从内存加载音频
         # 如果之前已经播放了一个音乐，则停止之前的音乐
