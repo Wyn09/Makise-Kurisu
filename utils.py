@@ -51,7 +51,7 @@ async def chatWithTTS(
 
     # 如果是本地部署的Model，并且不是中文或者粤语，那么就调用翻译API
     if chatModel.language not in ["中文", "粤语", "中英混合"]:
-        ChatModelResponse.outputs["translated_response"] = await translate(ChatModelResponse.outputs["response"].replace("\n", ""))
+        ChatModelResponse.outputs["translated_response"] = await translate(ChatModelResponse.outputs["response"])
         print(f"\n\t({ChatModelResponse.outputs["translated_response"]})")
 
     if len(ChatModelResponse.outputs["chat_history"]) >= ChatModelResponse.chat_history_length * 2:
@@ -68,8 +68,8 @@ async def chatWithImg(
     max_new_tokens=Img2TextModelConfig.max_new_tokens,
     
 ):
-    print("*" * 80)
-
+    print("\n...")
+    
     # 这里换成了直接用内存传输数据，避免了io
     img_buffer = await screenshot_buffer()
     # print("截图已保存在: ", img_file_path)

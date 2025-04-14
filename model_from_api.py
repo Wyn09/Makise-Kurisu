@@ -10,7 +10,7 @@ import numpy as np
 from typing import Optional, Dict
 from contextlib import AsyncExitStack
 import datetime
-from utils import get_now_datetime
+from utils import get_now_datetime, chatWithImg
 from multi_function import write_current_time, get_user_uninput_timePeriod, agenda_to_datetime
 from baidu_asr import record_and_recognize
 from qwen_vl_3B_Instruct import Img2TextModel
@@ -66,7 +66,7 @@ class APIChatModel:
                 "多语种混合": r"./system_prompts/2B_sys_prompt_ZH.txt"
             }
         }
-    
+
         self.exit_stack = AsyncExitStack()
         # 存储 (server_name -> MCP ClientSession) 映射
         self.sessions: Dict[str, ClientSession] = {}
@@ -79,15 +79,15 @@ class APIChatModel:
     async def post_init(self):
         # 服务器脚本
         servers = {
-            "WeatherServer": "./mcpServer_Weather.py",
-            "PythonServer": "./mcpServer_Python.py",
-            "EmailServer": "./mcpServer_Email.py",
-            "SearchServer": "./mcpServer_Search.py",
-            "MusicServer": "./mcpServer_Music.py",
-            "ClipboardServer": "./mcpServer_Clipboard.py",
-            "ScheduleServer": "./mcpServer_Schedule.py",
+            # "WeatherServer": "./mcpServer_Weather.py",
+            # "PythonServer": "./mcpServer_Python.py",
+            # "EmailServer": "./mcpServer_Email.py",
+            # "SearchServer": "./mcpServer_Search.py",
+            # "MusicServer": "./mcpServer_Music.py",
+            # "ClipboardServer": "./mcpServer_Clipboard.py",
+            # "ScheduleServer": "./mcpServer_Schedule.py",
 
-            # "ScreenshotServer": "mcpServer_Screenshot.py",
+            "ScreenshotServer": "./mcpServer_Screenshot.py",
             # "SQLServer": "mcpServer_SQL.py",
         }
     
@@ -135,7 +135,7 @@ class APIChatModel:
             frequency_penalty=self.repetition_penalty,
         )
         return res
-
+        
     # 以下是mcp-client相关函数
 
     async def connect_to_servers(self, servers: dict):
@@ -165,12 +165,12 @@ class APIChatModel:
         # 转化 function calling 格式
         self.all_tools = await self.transform_json(self.all_tools)
         # print(self.all_tools)
-        print("\n✅ 已连接到下列服务器:")
-        for name in servers:
-            print(f" - {name}: {servers[name]}")
-        print("\n汇总的工具:")
-        for t in self.all_tools:
-            print(f" - {t['function']['name']}")
+        # print("\n✅ 已连接到下列服务器:")
+        # for name in servers:
+        #     print(f" - {name}: {servers[name]}")
+        # print("\n汇总的工具:")
+        # for t in self.all_tools:
+        #     print(f" - {t['function']['name']}")
 
     async def transform_json(self, json2_data):
         """
@@ -350,7 +350,8 @@ class APIChatModel:
         if "agenda" in tool_name:
             await self.synchronized_agenda()
 
-        print(f"\n{tool_name}: {resp}\n")
+        # print(f"\n{tool_name}: {resp}\n")
+        print(f"\n{tool_name}")
         return resp.content if len(resp.content) > 0 else "工具执行无输出"
 
     async def cleanup(self):
@@ -429,7 +430,7 @@ async def main():
         await asyncio.sleep(0.5)
         # 同时监听文本输入和语音输入
         text_task = asyncio.create_task(text_input())
-        voice_task = asyncio.create_task(voice_input())
+        # voice_task = asyncio.create_task(voice_input())
         
         # 使用 asyncio.gather 等待任意一个任务完成
         # done: 这是一个集合，包含已经完成的任务。
@@ -437,7 +438,7 @@ async def main():
         done, pending = await asyncio.wait(
             [
                 text_task, 
-                voice_task
+                # voice_task
              ],    # 传递一个任务列表，这里包含两个任务：text_task 和 voice_task。 
             return_when=asyncio.FIRST_COMPLETED # 这个参数指定 asyncio.wait 在第一个任务完成时立即返回，而不是等待所有任务完成
         )

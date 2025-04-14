@@ -49,7 +49,7 @@ class Img2TextModelConfig:
     max_new_tokens = 256
     state = ScreenshotState()
     freeze_time = 18
-    model = []  
+
 
 class LocalChatModelConfig:
     base_model = r"../../pretrained_models/Qwen/Qwen2.5-3B-Instruct"
@@ -61,19 +61,19 @@ class LocalChatModelConfig:
     top_p = 0.8
     max_new_tokens = 80
     repetition_penalty = 1.2
-    model = []
+
 
 class APIChatModelConfig:
     base_model = "deepseek-chat"  # GLM-4-Flash, deepseek-chat
     api_key = os.getenv("DEEPSEEK_API_KEY")    # ZHIPU_API_KEY, DEEPSEEK_API_KEY
     base_url = os.getenv("DEEPSEEK_API_KEY_URL")   # ZHIPU_API_KEY_URL, DEEPSEEK_API_KEY_URL
     system_prompt = API_MODEL_SYSTEM_PROMPT
-    temperature = 1.0
-    top_p = 0.7
+    temperature = 1.8
+    top_p = 1.0
     max_new_tokens = 200
     repetition_penalty = 1.4
     role = "kurisu"
-    mdoel = []
+
 
 
 class SoundObj:
@@ -87,7 +87,7 @@ class ChatModelResponse:
         "chat_history": []
     }
     
-    chat_history_length = 20
+    chat_history_length = 40
 
 
 

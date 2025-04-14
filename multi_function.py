@@ -58,14 +58,12 @@ async def functionCall_or_not(
 
 async def handle_user_inputs(
     chatModel, 
-    img2textModel, 
-    intentModel, 
     user_input, 
     loop
 ):
-    res = await functionCall_or_not(chatModel, img2textModel, intentModel, user_input, loop)
-    if not res:
-        await chatWithTTS(chatModel, user_input)
+    # res = await functionCall_or_not(chatModel, img2textModel, intentModel, user_input, loop)
+    # if not res:
+    await chatWithTTS(chatModel, user_input)
 
 
 
@@ -157,7 +155,7 @@ async def agenda_to_datetime():
     return agenda   
 
 async def monitor_user_input_time(chatModel, time_size=40, time_step=40):
-
+    
     while True:
         await asyncio.sleep(0.5)
         # 如果还没记录用户输入时间

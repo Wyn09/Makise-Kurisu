@@ -32,14 +32,12 @@ chatModel = APIChatModel(
     repetition_penalty=APIChatModelConfig.repetition_penalty,
     role=APIChatModelConfig.role
 )
-
-img2textModel = Img2TextModel(Img2TextModelConfig.quantization)
-intentModel = IntentModel()
 chatModel.set_model_language(TTSModelConfig.text_language)
 ChatModelResponse.outputs["chat_history"].append({"role": "system", "content": chatModel.system_prompt})
 
-APIChatModelConfig.mdoel.append(chatModel)
-Img2TextModelConfig.model.append(img2textModel)
+
+# 只有在主动识别时才在主进程中加载vl model
+# img2textModel = Img2TextModel(Img2TextModelConfig.quantization)
 
 
 
@@ -58,17 +56,16 @@ async def recognize_screenshot(
     )
 
 async def read_user_inputs(
-    chatModel,
-    img2textModel,
-    intentModel
+    chatModel
 ):
     try:
         loop = asyncio.get_running_loop()
-
-        asyncio.create_task(monitor_user_input_time(chatModel, time_size=30, time_step=120))
-
+        
+        # time_size ~ time_size + time_step
+        asyncio.create_task(monitor_user_input_time(chatModel, time_size=80, time_step=60))
+        
         while True:
-            await asyncio.sleep(0.2)
+            # await asyncio.sleep(0.05)
             text_task = asyncio.create_task(text_input())
             voice_task = asyncio.create_task(voice_input())
             # 使用 asyncio.gather 等待任意一个任务完成
@@ -108,8 +105,6 @@ async def read_user_inputs(
                 asyncio.create_task(
                     handle_user_inputs(
                         chatModel, 
-                        img2textModel, 
-                        intentModel, 
                         user_input, 
                         loop
                     )
@@ -127,7 +122,7 @@ async def main():
         
         await asyncio.gather(
             #  recognize_screenshot(chatModel, img2textModel),
-            read_user_inputs(chatModel, img2textModel, intentModel),
+            read_user_inputs(chatModel),
 
         )
     except asyncio.CancelledError as e:
