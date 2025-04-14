@@ -75,11 +75,15 @@ async def baidu_translate(text, appid, secret_key, tgt_language):
 
 async def translate(text, tgt_language="中文"):
     translated_text = await baidu_translate(text, APP_ID, SECRET_KEY, tgt_language)
-    result = "".join([item["dst"] for item in translated_text["trans_result"]])
+    result = "\n".join([item["dst"] for item in translated_text["trans_result"]])
     return result
 
 
 
 if __name__ == "__main__":
-    text = asyncio.run(translate("你好", "日文"))
+    raw_text = """Self-attention, sometimes called intra-attention is an attention mechanism relating different positions
+of a single sequence in order to compute a representation of the sequence. Self-attention has been
+used successfully in a variety of tasks including reading comprehension, abstractive summarization,
+textual entailment and learning task-independent sentence representations"""
+    text = asyncio.run(translate(raw_text, "中文"))
     print(text)

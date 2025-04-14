@@ -69,7 +69,7 @@ async def chatWithImg(
     
 ):
     print("\n...")
-    
+
     # 这里换成了直接用内存传输数据，避免了io
     img_buffer = await screenshot_buffer()
     # print("截图已保存在: ", img_file_path)

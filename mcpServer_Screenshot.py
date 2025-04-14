@@ -23,14 +23,12 @@ async def execute_screenshot(user_input=""):
     """
     查看user的屏幕内容  
     
-    :param str user_input: user输入的文本内容
+    :param str user_input: user输入的文本内容,query
     :return: 返回识别屏幕的内容
     """
     
     # 屏幕要延长auto screenshot多一点
     await asyncio.sleep(2)  # 给2秒钟准备来让她看屏幕
-
-    print("\n...")
     
     # 这里换成了直接用内存传输数据，避免了io
     img_buffer = await screenshot_buffer()
